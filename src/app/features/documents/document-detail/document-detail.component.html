@@ -1,0 +1,238 @@
+<app-header></app-header>
+
+<div class="document-detail-container">
+  @if (loading) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+      <p>Loading document...</p>
+    </div>
+  } @else if (document) {
+    <!-- Header Section -->
+    <div class="document-header">
+      <button mat-icon-button [routerLink]="['/documents']" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      
+      <div class="header-content">
+        <h1>{{ document.title }}</h1>
+        
+        <div class="document-meta">
+          <mat-chip-listbox>
+            <mat-chip>
+              <mat-icon>person</mat-icon>
+              {{ document.owner_name }}
+            </mat-chip>
+            <mat-chip>
+              <mat-icon>calendar_today</mat-icon>
+              {{ formatDate(document.created_at) }}
+            </mat-chip>
+            <mat-chip>
+              <mat-icon>folder</mat-icon>
+              {{ document.sharing_level }}
+            </mat-chip>
+            <mat-chip>
+              <mat-icon>insert_drive_file</mat-icon>
+              {{ formatFileSize(document.file_size) }}
+            </mat-chip>
+            <mat-chip>
+              <mat-icon>visibility</mat-icon>
+              {{ document.views }} views
+            </mat-chip>
+          </mat-chip-listbox>
+        </div>
+
+        <div class="action-buttons">
+          <button mat-raised-button color="primary" (click)="downloadDocument()">
+            <mat-icon>download</mat-icon>
+            Download
+          </button>
+          
+          <button mat-raised-button (click)="toggleFavorite()">
+            <mat-icon>{{ isFavorite ? 'favorite' : 'favorite_border' }}</mat-icon>
+            {{ isFavorite ? 'Favorited' : 'Add to Favorites' }}
+          </button>
+
+          @if (isOwner) {
+            <button mat-raised-button color="accent" (click)="editDocument()">
+              <mat-icon>edit</mat-icon>
+              Edit
+            </button>
+            
+            <button mat-raised-button color="warn" (click)="deleteDocument()">
+              <mat-icon>delete</mat-icon>
+              Delete
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="content-grid">
+      <!-- Left Column: Preview & Description -->
+      <div class="main-content">
+        <!-- Preview Section -->
+        @if (canPreview()) {
+          <mat-card class="preview-card">
+            <mat-card-header>
+              <mat-card-title>Preview</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              @if (isImage()) {
+                <img [src]="document.file_path" [alt]="document.title" class="preview-image">
+              } @else if (isPdf()) {
+                <iframe [src]="safeFileUrl" class="preview-iframe"></iframe>
+              }
+            </mat-card-content>
+          </mat-card>
+        } @else {
+          <mat-card class="preview-card">
+            <mat-card-content class="no-preview">
+              <mat-icon>insert_drive_file</mat-icon>
+              <p>Preview not available for this file type</p>
+              <button mat-raised-button color="primary" (click)="downloadDocument()">
+                <mat-icon>download</mat-icon>
+                Download to View
+              </button>
+            </mat-card-content>
+          </mat-card>
+        }
+
+        <!-- Description Section -->
+        <mat-card class="description-card">
+          <mat-card-header>
+            <mat-card-title>Description</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p>{{ document.summary }}</p>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Tags Section -->
+        @if (document.tags && document.tags.length > 0) {
+          <mat-card class="tags-card">
+            <mat-card-header>
+              <mat-card-title>Tags</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <mat-chip-listbox>
+                @for (tag of document.tags; track tag) {
+                  <mat-chip>{{ tag }}</mat-chip>
+                }
+              </mat-chip-listbox>
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
+
+      <!-- Right Column: Rating, Versions, Related -->
+      <div class="sidebar-content">
+        <!-- Rating Section -->
+        <mat-card class="rating-card">
+          <mat-card-header>
+            <mat-card-title>Rating</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            @if (document.average_rating) {
+              <div class="average-rating">
+                <span class="rating-number">{{ document.average_rating.toFixed(1) }}</span>
+                <div class="stars">
+                  @for (star of ratingStars; track star) {
+                    <mat-icon [class.filled]="star <= (document.average_rating || 0)">
+                      {{ star <= (document.average_rating || 0) ? 'star' : 'star_border' }}
+                    </mat-icon>
+                  }
+                </div>
+              </div>
+            }
+            
+            <div class="rate-section">
+              <p>Rate this document:</p>
+              <div class="rating-stars">
+                @for (star of ratingStars; track star) {
+                  <button 
+                    mat-icon-button 
+                    (click)="rateDocument(star)"
+                    [class.selected]="star <= userRating"
+                    matTooltip="{{ star }} star{{ star > 1 ? 's' : '' }}">
+                    <mat-icon>{{ star <= userRating ? 'star' : 'star_border' }}</mat-icon>
+                  </button>
+                }
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Version History Section -->
+        <mat-card class="versions-card">
+          <mat-card-header>
+            <mat-card-title>Version History</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            @if (versionsLoading) {
+              <div class="loading-small">
+                <mat-spinner diameter="30"></mat-spinner>
+              </div>
+            } @else if (versions.length > 0) {
+              <mat-accordion>
+                @for (version of versions; track version.id) {
+                  <mat-expansion-panel>
+                    <mat-expansion-panel-header>
+                      <mat-panel-title>
+                        Version {{ version.version_number }}
+                      </mat-panel-title>
+                      <mat-panel-description>
+                        {{ formatDate(version.updated_at) }}
+                      </mat-panel-description>
+                    </mat-expansion-panel-header>
+                    
+                    <mat-list>
+                      <mat-list-item>
+                        <mat-icon matListItemIcon>person</mat-icon>
+                        <span matListItemTitle>Updated by</span>
+                        <span matListItemLine>{{ version.updated_by }}</span>
+                      </mat-list-item>
+                      @if (version.change_notes) {
+                        <mat-list-item>
+                          <mat-icon matListItemIcon>notes</mat-icon>
+                          <span matListItemTitle>Changes</span>
+                          <span matListItemLine>{{ version.change_notes }}</span>
+                        </mat-list-item>
+                      }
+                    </mat-list>
+                  </mat-expansion-panel>
+                }
+              </mat-accordion>
+            } @else {
+              <p class="no-data">No version history available</p>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Related Documents Section -->
+        <mat-card class="related-card">
+          <mat-card-header>
+            <mat-card-title>Related Documents</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            @if (relatedLoading) {
+              <div class="loading-small">
+                <mat-spinner diameter="30"></mat-spinner>
+              </div>
+            } @else if (relatedDocuments.length > 0) {
+              <div class="related-docs">
+                @for (relatedDoc of relatedDocuments; track relatedDoc.id) {
+                  <app-document-card [document]="relatedDoc"></app-document-card>
+                }
+              </div>
+            } @else {
+              <p class="no-data">No related documents found</p>
+            }
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  }
+</div>
+
+<app-footer></app-footer>

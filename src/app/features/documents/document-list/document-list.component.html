@@ -1,0 +1,81 @@
+<app-header 
+  [unreadNotifications]="(unreadCount$ | async) ?? 0"
+  [currentUser]="currentUser$ | async"
+  (logoutClicked)="onLogout()">
+</app-header>
+
+<div class="document-list-container">
+  <div class="toolbar">
+    <h1>All Documents</h1>
+    <button mat-raised-button color="primary" routerLink="/documents/upload">
+      <mat-icon>add</mat-icon>
+      Upload Document
+    </button>
+  </div>
+
+  <div class="filters">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search</mat-label>
+      <input matInput [(ngModel)]="searchTerm" (ngModelChange)="onSearch()" placeholder="Search by title or summary...">
+      <mat-icon matPrefix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Sharing Level</mat-label>
+      <mat-select [(ngModel)]="filterLevel" (selectionChange)="onFilter()">
+        <mat-option value="ALL">All</mat-option>
+        <mat-option value="PUBLIC">🌐 Public</mat-option>
+        <mat-option value="DEPARTMENT">👥 Department</mat-option>
+        <mat-option value="PRIVATE">🔒 Private</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Sort By</mat-label>
+      <mat-select [(ngModel)]="sortBy" (selectionChange)="onSort()">
+        <mat-option value="recent">Newest First</mat-option>
+        <mat-option value="oldest">Oldest First</mat-option>
+        <mat-option value="popular">Most Popular</mat-option>
+        <mat-option value="title">Title A-Z</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  @if (loading) {
+    <div class="loading-state">
+      <p>Loading documents...</p>
+    </div>
+  } @else {
+    @if (displayedDocuments.length > 0) {
+      <div class="document-grid">
+        @for (doc of displayedDocuments; track doc.id) {
+          <app-document-card 
+            [document]="doc"
+            [showActions]="false"
+            (cardClicked)="navigateToDetail(doc.id)">
+          </app-document-card>
+        }
+      </div>
+
+      <mat-paginator 
+        [length]="totalDocuments"
+        [pageSize]="pageSize"
+        [pageIndex]="pageIndex"
+        [pageSizeOptions]="[5, 10, 25, 50]"
+        (page)="onPageChange($event)"
+        showFirstLastButtons>
+      </mat-paginator>
+    } @else {
+      <div class="empty-state">
+        <mat-icon>folder_open</mat-icon>
+        <h2>No documents found</h2>
+        <p>Try adjusting your search or filters</p>
+        <button mat-raised-button color="primary" routerLink="/documents/upload">
+          Upload Your First Document
+        </button>
+      </div>
+    }
+  }
+</div>
+
+<app-footer></app-footer>

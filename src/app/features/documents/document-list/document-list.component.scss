@@ -1,0 +1,149 @@
+.document-list-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  min-height: calc(100vh - 200px);
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 600;
+    color: #333;
+  }
+
+  button {
+    height: 44px;
+    padding: 0 24px;
+    font-weight: 500;
+
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 32px;
+
+  mat-form-field {
+    width: 100%;
+  }
+
+  .search-field {
+    mat-icon {
+      color: #666;
+    }
+  }
+}
+
+.document-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 80px 24px;
+  color: #666;
+  font-size: 1.1rem;
+
+  p {
+    margin: 0;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 80px 24px;
+  color: #999;
+
+  mat-icon {
+    font-size: 80px;
+    width: 80px;
+    height: 80px;
+    color: #ddd;
+    margin-bottom: 16px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin: 16px 0 8px 0;
+    color: #666;
+  }
+
+  p {
+    font-size: 1rem;
+    margin-bottom: 24px;
+  }
+
+  button {
+    height: 44px;
+    padding: 0 32px;
+  }
+}
+
+mat-paginator {
+  background: transparent;
+  margin-top: 16px;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .document-list-container {
+    padding: 24px 16px;
+  }
+
+  .toolbar {
+    h1 {
+      font-size: 1.5rem;
+    }
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .filters {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .document-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .filters {
+    grid-template-columns: 2fr 1fr 1fr;
+  }
+
+  .document-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

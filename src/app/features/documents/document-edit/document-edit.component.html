@@ -1,0 +1,320 @@
+<app-header></app-header>
+
+<div class="edit-container">
+  @if (loading) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+      <p>Loading document...</p>
+    </div>
+  } @else if (document) {
+    <div class="edit-header">
+      <h1>Edit Document</h1>
+      <p>Update your document details and optionally upload a new version</p>
+    </div>
+
+    <form [formGroup]="editForm" (ngSubmit)="onSubmit()">
+      <div class="edit-content">
+        <!-- Left Column: Document Info -->
+        <div class="info-section">
+          <mat-card class="current-info-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>info</mat-icon>
+                Current Document
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="info-item">
+                <mat-icon>insert_drive_file</mat-icon>
+                <div>
+                  <strong>{{ document.title }}</strong>
+                  <p>Version {{ document.version_number }}</p>
+                </div>
+              </div>
+              <div class="info-item">
+                <mat-icon>storage</mat-icon>
+                <div>
+                  <strong>File Size</strong>
+                  <p>{{ formatFileSize(document.file_size) }}</p>
+                </div>
+              </div>
+              <div class="info-item">
+                <mat-icon>calendar_today</mat-icon>
+                <div>
+                  <strong>Last Updated</strong>
+                  <p>{{ document.updated_at | date: 'medium' }}</p>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Optional New Version Upload -->
+          <mat-card class="version-upload-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>update</mat-icon>
+                Update File (Optional)
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <p class="help-text">
+                Upload a new version of the file to create version history. 
+                If not provided, only metadata will be updated.
+              </p>
+
+              @if (!selectedFile) {
+                <div 
+                  class="dropzone" 
+                  appDragDrop 
+                  (fileDropped)="onFileDropped($event)"
+                  [class.error]="fileError">
+                  <mat-icon>cloud_upload</mat-icon>
+                  <p>Drag and drop file here</p>
+                  <label for="file-input" class="file-input-label">
+                    <input 
+                      type="file" 
+                      id="file-input" 
+                      (change)="onFileSelected($event)"
+                      [accept]="allowedFileTypes.join(',')"
+                      style="display: none;">
+                    <button mat-stroked-button color="primary" type="button" onclick="document.getElementById('file-input').click()">
+                      Browse Files
+                    </button>
+                  </label>
+                </div>
+              } @else {
+                <div class="selected-file">
+                  <div class="file-info">
+                    <mat-icon class="file-icon">insert_drive_file</mat-icon>
+                    <div class="file-details">
+                      <h4>{{ selectedFile.name }}</h4>
+                      <p>{{ formatFileSize(selectedFile.size) }}</p>
+                    </div>
+                  </div>
+                  <button mat-icon-button color="warn" (click)="removeFile()" type="button">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+              }
+
+              @if (fileError) {
+                <div class="error-message">
+                  <mat-icon>error</mat-icon>
+                  {{ fileError }}
+                </div>
+              }
+
+              @if (uploadNewVersion) {
+                <mat-form-field appearance="outline" class="full-width version-notes">
+                  <mat-label>Version Notes (Required)</mat-label>
+                  <textarea 
+                    matInput 
+                    formControlName="versionNotes" 
+                    placeholder="Describe what changed in this version"
+                    rows="3"></textarea>
+                  <mat-icon matPrefix>notes</mat-icon>
+                  @if (editForm.get('versionNotes')?.hasError('required') && editForm.get('versionNotes')?.touched) {
+                    <mat-error>Version notes are required when uploading a new file</mat-error>
+                  }
+                  @if (editForm.get('versionNotes')?.hasError('maxlength')) {
+                    <mat-error>Version notes cannot exceed 500 characters</mat-error>
+                  }
+                </mat-form-field>
+              }
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Sharing Settings -->
+          <mat-card class="sharing-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>share</mat-icon>
+                Sharing Settings
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Sharing Level</mat-label>
+                <mat-select formControlName="sharingLevel">
+                  @for (level of sharingLevels; track level.value) {
+                    <mat-option [value]="level.value">
+                      {{ level.label }}
+                    </mat-option>
+                  }
+                </mat-select>
+                <mat-icon matPrefix>security</mat-icon>
+              </mat-form-field>
+
+              @if (showGroupSelection) {
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Select Groups</mat-label>
+                  <mat-select formControlName="groupIds" multiple>
+                    @for (group of availableGroups; track group.id) {
+                      <mat-option [value]="group.id">
+                        {{ group.name }}
+                      </mat-option>
+                    }
+                  </mat-select>
+                  <mat-icon matPrefix>group</mat-icon>
+                  <mat-hint>Choose which groups can access this document</mat-hint>
+                </mat-form-field>
+              }
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <!-- Right Column: Document Details -->
+        <div class="details-section">
+          <mat-card class="details-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>description</mat-icon>
+                Document Details
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <!-- Title -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Title</mat-label>
+                <input matInput formControlName="title" placeholder="Enter document title">
+                <mat-icon matPrefix>title</mat-icon>
+                @if (editForm.get('title')?.hasError('required') && editForm.get('title')?.touched) {
+                  <mat-error>Title is required</mat-error>
+                }
+                @if (editForm.get('title')?.hasError('minlength')) {
+                  <mat-error>Title must be at least 3 characters</mat-error>
+                }
+                @if (editForm.get('title')?.hasError('maxlength')) {
+                  <mat-error>Title cannot exceed 200 characters</mat-error>
+                }
+              </mat-form-field>
+
+              <!-- Summary with AI -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Summary</mat-label>
+                <textarea 
+                  matInput 
+                  formControlName="summary" 
+                  placeholder="Enter document summary"
+                  rows="5"></textarea>
+                <mat-icon matPrefix>notes</mat-icon>
+                <button 
+                  mat-icon-button 
+                  matSuffix 
+                  type="button"
+                  (click)="generateSummary()"
+                  [disabled]="generatingSummary || !editForm.get('title')?.value"
+                  matTooltip="Generate AI Summary">
+                  @if (generatingSummary) {
+                    <mat-spinner diameter="20"></mat-spinner>
+                  } @else {
+                    <mat-icon>auto_awesome</mat-icon>
+                  }
+                </button>
+                @if (editForm.get('summary')?.hasError('required') && editForm.get('summary')?.touched) {
+                  <mat-error>Summary is required</mat-error>
+                }
+                @if (editForm.get('summary')?.hasError('minlength')) {
+                  <mat-error>Summary must be at least 10 characters</mat-error>
+                }
+                @if (editForm.get('summary')?.hasError('maxlength')) {
+                  <mat-error>Summary cannot exceed 1000 characters</mat-error>
+                }
+                <mat-hint>Describe what this document is about</mat-hint>
+              </mat-form-field>
+
+              <!-- Tags -->
+              <div class="tags-section">
+                <div class="tags-header">
+                  <label>Tags</label>
+                  <button 
+                    mat-stroked-button 
+                    color="primary" 
+                    type="button"
+                    (click)="generateTags()"
+                    [disabled]="generatingTags"
+                    class="ai-button">
+                    @if (generatingTags) {
+                      <mat-spinner diameter="16"></mat-spinner>
+                    } @else {
+                      <mat-icon>auto_awesome</mat-icon>
+                    }
+                    AI Suggest
+                  </button>
+                </div>
+
+                <div class="tag-input-group">
+                  <mat-form-field appearance="outline" class="tag-input">
+                    <mat-label>Add Tag</mat-label>
+                    <input 
+                      matInput 
+                      [(ngModel)]="newTag" 
+                      [ngModelOptions]="{standalone: true}"
+                      (keyup.enter)="addTag()"
+                      placeholder="Enter tag name">
+                    <mat-icon matPrefix>label</mat-icon>
+                  </mat-form-field>
+                  <button 
+                    mat-raised-button 
+                    color="primary" 
+                    type="button"
+                    (click)="addTag()"
+                    [disabled]="!newTag.trim()">
+                    Add
+                  </button>
+                </div>
+
+                @if (tags.length > 0) {
+                  <mat-chip-listbox class="tags-list">
+                    @for (tag of tags; track tag) {
+                      <mat-chip (removed)="removeTag(tag)">
+                        {{ tag }}
+                        <button matChipRemove>
+                          <mat-icon>cancel</mat-icon>
+                        </button>
+                      </mat-chip>
+                    }
+                  </mat-chip-listbox>
+                } @else {
+                  <p class="no-tags">No tags added yet. Use AI to suggest relevant tags.</p>
+                }
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <button 
+          mat-stroked-button 
+          type="button" 
+          (click)="cancel()"
+          [disabled]="saving">
+          <mat-icon>close</mat-icon>
+          Cancel
+        </button>
+        
+        <button 
+          mat-raised-button 
+          color="primary" 
+          type="submit"
+          [disabled]="saving || editForm.invalid">
+          @if (saving) {
+            <ng-container>
+              <mat-spinner diameter="20"></mat-spinner>
+              Saving...
+            </ng-container>
+          } @else {
+            <ng-container>
+              <mat-icon>save</mat-icon>
+              Save Changes
+            </ng-container>
+          }
+        </button>
+      </div>
+    </form>
+  }
+</div>
+
+<app-footer></app-footer>

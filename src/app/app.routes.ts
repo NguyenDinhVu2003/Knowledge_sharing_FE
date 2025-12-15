@@ -12,6 +12,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'documents',
+    loadChildren: () => import('./features/documents/documents.module').then(m => m.DocumentsModule),
+    canActivate: [authGuard]
+  },
+  {
     path: 'test-shared',
     loadComponent: () => import('./shared/shared-test/shared-test.component').then(m => m.SharedTestComponent),
     title: 'Shared Components Test'

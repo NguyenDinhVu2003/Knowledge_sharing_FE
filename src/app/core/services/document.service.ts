@@ -1,8 +1,8 @@
 import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of, delay } from 'rxjs';
-import { Document } from '../models';
+import { Observable, of, delay, throwError } from 'rxjs';
+import { Document, DocumentVersion, Group } from '../models';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -356,6 +356,220 @@ export class DocumentService {
 
     /* ACTUAL API IMPLEMENTATION - Uncomment when backend is ready
     return this.http.get<Document[]>(`${this.apiUrl}/documents`, { params });
+    */
+  }
+
+  /**
+   * Upload new document
+   * @param formData - FormData containing file and document information
+   * @returns Observable of created Document
+   */
+  uploadDocument(formData: FormData): Observable<Document> {
+    // MOCK IMPLEMENTATION - Replace with actual API call when backend is ready
+    const mockDoc: Document = {
+      id: this.mockDocuments.length + 1,
+      title: formData.get('title') as string,
+      summary: formData.get('summary') as string || '',
+      file_path: '/mock/path/file.pdf',
+      file_type: 'PDF',
+      file_size: 1024000,
+      owner_id: 1,
+      owner_name: 'admin',
+      sharing_level: formData.get('sharingLevel') as string,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      version_number: 1,
+      is_archived: false,
+      average_rating: 0
+    };
+    
+    this.mockDocuments.unshift(mockDoc);
+    return of(mockDoc).pipe(delay(1000));
+
+    /* ACTUAL API IMPLEMENTATION - Uncomment when backend is ready
+    return this.http.post<Document>(`${this.apiUrl}/documents`, formData);
+    */
+  }
+
+  /**
+   * Update existing document
+   * @param id - Document ID
+   * @param formData - FormData containing updated information
+   * @returns Observable of updated Document
+   */
+  updateDocument(id: number, formData: FormData): Observable<Document> {
+    // MOCK IMPLEMENTATION - Replace with actual API call when backend is ready
+    const index = this.mockDocuments.findIndex(doc => doc.id === id);
+    
+    if (index === -1) {
+      return throwError(() => new Error('Document not found'));
+    }
+
+    const updatedDoc: Document = {
+      ...this.mockDocuments[index],
+      title: formData.get('title') as string || this.mockDocuments[index].title,
+      summary: formData.get('summary') as string || this.mockDocuments[index].summary,
+      sharing_level: formData.get('sharingLevel') as string || this.mockDocuments[index].sharing_level,
+      updated_at: new Date().toISOString(),
+      version_number: this.mockDocuments[index].version_number + 1
+    };
+
+    this.mockDocuments[index] = updatedDoc;
+    return of(updatedDoc).pipe(delay(1000));
+
+    /* ACTUAL API IMPLEMENTATION - Uncomment when backend is ready
+    return this.http.put<Document>(`${this.apiUrl}/documents/${id}`, formData);
+    */
+  }
+
+  /**
+   * Delete document
+   * @param id - Document ID
+   * @returns Observable of void
+   */
+  deleteDocument(id: number): Observable<void> {
+    // MOCK IMPLEMENTATION - Replace with actual API call when backend is ready
+    const index = this.mockDocuments.findIndex(doc => doc.id === id);
+    
+    if (index === -1) {
+      return throwError(() => new Error('Document not found'));
+    }
+
+    this.mockDocuments.splice(index, 1);
+    return of(void 0).pipe(delay(500));
+
+    /* ACTUAL API IMPLEMENTATION - Uncomment when backend is ready
+    return this.http.delete<void>(`${this.apiUrl}/documents/${id}`);
+    */
+  }
+
+  /**
+   * Get document version history
+   * @param docId - Document ID
+   * @returns Observable of DocumentVersion array
+   */
+  getDocumentVersions(docId: number): Observable<DocumentVersion[]> {
+    // MOCK IMPLEMENTATION - Replace with actual API call when backend is ready
+    const mockVersions: DocumentVersion[] = [
+      {
+        id: 1,
+        document_id: docId,
+        version_number: 1,
+        file_path: '/files/v1/document.pdf',
+        updated_by: 'admin',
+        updated_at: new Date('2025-12-01').toISOString(),
+        change_notes: 'Initial version'
+      },
+      {
+        id: 2,
+        document_id: docId,
+        version_number: 2,
+        file_path: '/files/v2/document.pdf',
+        updated_by: 'admin',
+        updated_at: new Date('2025-12-10').toISOString(),
+        change_notes: 'Updated content and formatting'
+      }
+    ];
+
+    return of(mockVersions).pipe(delay(300));
+
+    /* ACTUAL API IMPLEMENTATION - Uncomment when backend is ready
+    return this.http.get<DocumentVersion[]>(`${this.apiUrl}/documents/${docId}/versions`);
+    */
+  }
+
+  /**
+   * Rate a document
+   * @param docId - Document ID
+   * @param rating - Rating value (1-5)
+   * @returns Observable of void
+   */
+  rateDocument(docId: number, rating: number): Observable<void> {
+    // MOCK IMPLEMENTATION - Replace with actual API call when backend is ready
+    const doc = this.mockDocuments.find(d => d.id === docId);
+    if (doc) {
+      // Simulate rating calculation
+      doc.average_rating = rating;
+    }
+    
+    return of(void 0).pipe(delay(300));
+
+    /* ACTUAL API IMPLEMENTATION - Uncomment when backend is ready
+    return this.http.post<void>(`${this.apiUrl}/documents/${docId}/rate`, { rating });
+    */
+  }
+
+  /**
+   * Get related documents
+   * @param docId - Document ID
+   * @returns Observable of Document array
+   */
+  getRelatedDocuments(docId: number): Observable<Document[]> {
+    // MOCK IMPLEMENTATION - Replace with actual API call when backend is ready
+    // Return random 3 documents
+    const related = this.mockDocuments
+      .filter(doc => doc.id !== docId)
+      .slice(0, 3);
+    
+    return of(related).pipe(delay(300));
+
+    /* ACTUAL API IMPLEMENTATION - Uncomment when backend is ready
+    return this.http.get<Document[]>(`${this.apiUrl}/documents/${docId}/related`);
+    */
+  }
+
+  /**
+   * Generate AI summary from content
+   * @param content - Document content
+   * @returns Observable with generated summary
+   */
+  generateSummary(content: string): Observable<{ summary: string }> {
+    // MOCK IMPLEMENTATION - Replace with actual API call when backend is ready
+    const mockSummary = {
+      summary: 'This document provides comprehensive insights into modern development practices, covering best practices, design patterns, and implementation strategies for building scalable applications.'
+    };
+    
+    return of(mockSummary).pipe(delay(1500));
+
+    /* ACTUAL API IMPLEMENTATION - Uncomment when backend is ready
+    return this.http.post<{ summary: string }>(`${this.apiUrl}/ai/summary`, { content });
+    */
+  }
+
+  /**
+   * Suggest tags using AI
+   * @param content - Document content
+   * @returns Observable with suggested tags
+   */
+  suggestTags(content: string): Observable<{ tags: string[] }> {
+    // MOCK IMPLEMENTATION - Replace with actual API call when backend is ready
+    const mockTags = {
+      tags: ['Development', 'Best Practices', 'Tutorial', 'Guide', 'Programming']
+    };
+    
+    return of(mockTags).pipe(delay(1500));
+
+    /* ACTUAL API IMPLEMENTATION - Uncomment when backend is ready
+    return this.http.post<{ tags: string[] }>(`${this.apiUrl}/ai/tags`, { content });
+    */
+  }
+
+  /**
+   * Get available groups for sharing
+   * @returns Observable of Group array
+   */
+  getAvailableGroups(): Observable<Group[]> {
+    // MOCK IMPLEMENTATION - Replace with actual API call when backend is ready
+    const mockGroups: Group[] = [
+      { id: 1, name: 'Engineering Team', description: 'All engineers' },
+      { id: 2, name: 'Product Team', description: 'Product managers and designers' },
+      { id: 3, name: 'Management', description: 'Leadership team' }
+    ];
+    
+    return of(mockGroups).pipe(delay(300));
+
+    /* ACTUAL API IMPLEMENTATION - Uncomment when backend is ready
+    return this.http.get<Group[]>(`${this.apiUrl}/groups`);
     */
   }
 }
