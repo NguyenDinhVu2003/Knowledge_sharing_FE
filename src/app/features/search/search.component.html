@@ -1,0 +1,223 @@
+<app-header></app-header>
+
+<div class="search-container">
+  <h1>🔍 Search Documents</h1>
+
+  <!-- Search Form -->
+  <mat-card class="search-form-card">
+    <form [formGroup]="searchForm">
+      <!-- Search Type Toggle -->
+      <div class="search-type-toggle">
+        <mat-button-toggle-group formControlName="searchType" 
+                                 (change)="onSearchTypeChange()">
+          <mat-button-toggle value="KEYWORD">
+            <mat-icon>search</mat-icon>
+            Keyword Search
+          </mat-button-toggle>
+          <mat-button-toggle value="SEMANTIC">
+            <mat-icon>auto_awesome</mat-icon>
+            AI Semantic Search
+          </mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+
+      <!-- Main Search Input -->
+      <mat-form-field appearance="outline" class="full-width search-input">
+        <mat-label>
+          {{ isSemanticSearch ? 'Describe what you\'re looking for...' : 'Search by title or content' }}
+        </mat-label>
+        <input matInput 
+               formControlName="query" 
+               [placeholder]="isSemanticSearch ? 'e.g., How to implement authentication in Angular?' : 'e.g., Angular components'"
+               (keyup.enter)="performSearch()">
+        <button mat-icon-button matSuffix (click)="performSearch()" [disabled]="searching">
+          <mat-icon>search</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <!-- Advanced Filters (only for keyword search) -->
+      <mat-expansion-panel *ngIf="!isSemanticSearch" class="filters-panel">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>filter_list</mat-icon>
+            Advanced Filters
+          </mat-panel-title>
+          <mat-panel-description>
+            {{ getActiveFiltersCount() }} filter(s) active
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <div class="filters-grid">
+          <!-- Tags Filter -->
+          <mat-form-field appearance="outline">
+            <mat-label>Tags</mat-label>
+            <mat-select formControlName="tags" multiple>
+              <mat-option *ngFor="let tag of availableTags" [value]="tag">
+                {{ tag }}
+              </mat-option>
+            </mat-select>
+            <mat-hint>Select multiple tags</mat-hint>
+          </mat-form-field>
+
+          <!-- Date Range -->
+          <mat-form-field appearance="outline">
+            <mat-label>From Date</mat-label>
+            <input matInput [matDatepicker]="pickerFrom" formControlName="dateFrom">
+            <mat-datepicker-toggle matSuffix [for]="pickerFrom"></mat-datepicker-toggle>
+            <mat-datepicker #pickerFrom></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>To Date</mat-label>
+            <input matInput [matDatepicker]="pickerTo" formControlName="dateTo">
+            <mat-datepicker-toggle matSuffix [for]="pickerTo"></mat-datepicker-toggle>
+            <mat-datepicker #pickerTo></mat-datepicker>
+          </mat-form-field>
+
+          <!-- Sharing Level Filter -->
+          <mat-form-field appearance="outline">
+            <mat-label>Sharing Level</mat-label>
+            <mat-select formControlName="sharingLevel">
+              <mat-option value="">All</mat-option>
+              <mat-option value="PUBLIC">🌐 Public</mat-option>
+              <mat-option value="DEPARTMENT">🏢 Department</mat-option>
+              <mat-option value="GROUP">👥 Group</mat-option>
+              <mat-option value="PRIVATE">🔒 Private</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Group Filter -->
+          <mat-form-field appearance="outline">
+            <mat-label>Group</mat-label>
+            <mat-select formControlName="groupId">
+              <mat-option value="">All Groups</mat-option>
+              <mat-option *ngFor="let group of availableGroups" [value]="group.id">
+                {{ group.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Sort By -->
+          <mat-form-field appearance="outline">
+            <mat-label>Sort By</mat-label>
+            <mat-select formControlName="sortBy">
+              <mat-option value="recent">Newest First</mat-option>
+              <mat-option value="oldest">Oldest First</mat-option>
+              <mat-option value="popular">Most Popular</mat-option>
+              <mat-option value="title">Title A-Z</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <mat-action-row>
+          <button mat-button (click)="clearFilters()">Clear All Filters</button>
+          <button mat-raised-button color="primary" (click)="performSearch()">
+            Apply Filters
+          </button>
+        </mat-action-row>
+      </mat-expansion-panel>
+    </form>
+  </mat-card>
+
+  <!-- Search Results -->
+  <div class="search-results">
+    <!-- Loading State -->
+    <div *ngIf="searching" class="loading-state">
+      <mat-spinner></mat-spinner>
+      <p>{{ isSemanticSearch ? 'AI is searching for relevant documents...' : 'Searching...' }}</p>
+    </div>
+
+    <!-- Results Header -->
+    <div *ngIf="!searching && searchPerformed" class="results-header">
+      <h2>
+        {{ searchResults.totalCount }} result(s) found
+        <span *ngIf="isSemanticSearch" class="ai-badge">
+          <mat-icon>auto_awesome</mat-icon>
+          AI Powered
+        </span>
+      </h2>
+      <p class="search-info">
+        Search query: "<strong>{{ lastSearchQuery }}</strong>"
+        <span *ngIf="searchResults.totalCount > 0">
+          | Page {{ searchResults.page + 1 }} of {{ searchResults.totalPages }}
+        </span>
+      </p>
+    </div>
+
+    <!-- No Results -->
+    <mat-card *ngIf="!searching && searchPerformed && searchResults.totalCount === 0" 
+              class="no-results">
+      <mat-icon>search_off</mat-icon>
+      <h3>No documents found</h3>
+      <p *ngIf="!isSemanticSearch">
+        Try adjusting your search terms or filters
+      </p>
+      <p *ngIf="isSemanticSearch">
+        Try rephrasing your question or using different keywords
+      </p>
+      <button mat-raised-button color="primary" (click)="clearFilters()">
+        Clear Filters
+      </button>
+    </mat-card>
+
+    <!-- Results Grid -->
+    <div *ngIf="!searching && searchResults.documents.length > 0" class="results-grid">
+      <app-document-card 
+        *ngFor="let doc of searchResults.documents; trackBy: trackByDocId"
+        [document]="doc">
+      </app-document-card>
+    </div>
+
+    <!-- Pagination -->
+    <mat-paginator 
+      *ngIf="!searching && searchResults.totalCount > 0"
+      [length]="searchResults.totalCount"
+      [pageSize]="pageSize"
+      [pageIndex]="searchResults.page"
+      [pageSizeOptions]="[10, 25, 50]"
+      (page)="onPageChange($event)"
+      showFirstLastButtons>
+    </mat-paginator>
+  </div>
+
+  <!-- Search Tips (initial state) -->
+  <mat-card *ngIf="!searchPerformed" class="search-tips">
+    <h3>
+      <mat-icon>lightbulb</mat-icon>
+      Search Tips
+    </h3>
+    <mat-list>
+      <mat-list-item>
+        <mat-icon matListItemIcon>check</mat-icon>
+        <div matListItemTitle>Keyword Search</div>
+        <div matListItemLine>Search for exact words or phrases in document titles and content</div>
+      </mat-list-item>
+      <mat-list-item>
+        <mat-icon matListItemIcon>auto_awesome</mat-icon>
+        <div matListItemTitle>AI Semantic Search</div>
+        <div matListItemLine>Ask natural language questions and AI will find relevant documents based on meaning</div>
+      </mat-list-item>
+      <mat-list-item>
+        <mat-icon matListItemIcon>filter_list</mat-icon>
+        <div matListItemTitle>Advanced Filters</div>
+        <div matListItemLine>Narrow down results by tags, dates, sharing level, and groups</div>
+      </mat-list-item>
+    </mat-list>
+
+    <h4>Example Searches:</h4>
+    <div class="example-searches">
+      <mat-chip-set>
+        <mat-chip (click)="searchExample('Angular components')">Angular components</mat-chip>
+        <mat-chip (click)="searchExample('How to implement authentication?')">
+          How to implement authentication?
+        </mat-chip>
+        <mat-chip (click)="searchExample('Spring Boot REST API')">Spring Boot REST API</mat-chip>
+        <mat-chip (click)="searchExample('Database design best practices')">
+          Database design best practices
+        </mat-chip>
+      </mat-chip-set>
+    </div>
+  </mat-card>
+</div>
+
+<app-footer></app-footer>
