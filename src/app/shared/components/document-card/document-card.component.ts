@@ -60,8 +60,8 @@ export class DocumentCardComponent {
   /**
    * Format date to readable string
    */
-  formatDate(date: Date): string {
-    const dateObj = new Date(date);
+  formatDate(date: Date | string): string {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
     return dateObj.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',

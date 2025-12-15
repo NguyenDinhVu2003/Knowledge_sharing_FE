@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -7,8 +8,8 @@ export const routes: Routes = [
   },
   {
     path: 'home',
-    loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent),
-    title: 'Home - Knowledge Sharing Platform'
+    loadChildren: () => import('./features/home/home.module').then(m => m.HomeModule),
+    canActivate: [authGuard]
   },
   {
     path: 'test-shared',
@@ -17,7 +18,7 @@ export const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: '/auth/login',
+    redirectTo: '/home',
     pathMatch: 'full'
   }
 ];

@@ -1,0 +1,107 @@
+<app-header 
+  [unreadNotifications]="(unreadCount$ | async) ?? 0"
+  [currentUser]="currentUser$ | async"
+  (logoutClicked)="onLogout()">
+</app-header>
+
+<div class="home-container">
+  <h1 class="welcome-title">Welcome, {{currentUser?.username}}!</h1>
+  
+  <!-- Section 1: Recent Documents -->
+  <section class="document-section">
+    <div class="section-header">
+      <h2>📄 Recently Added</h2>
+    </div>
+    
+    @if (recentDocuments$ | async; as recentDocs) {
+      @if (recentDocs.length > 0) {
+        <div class="document-grid">
+          @for (doc of recentDocs; track doc.id) {
+            <app-document-card 
+              [document]="doc"
+              [showActions]="false"
+              (cardClicked)="navigateToDocument(doc.id)">
+            </app-document-card>
+          }
+        </div>
+      } @else {
+        <p class="empty-state">No documents yet.</p>
+      }
+    } @else {
+      <div class="loading-state">
+        <p>Loading recent documents...</p>
+      </div>
+    }
+  </section>
+
+  <!-- Section 2: Popular Documents -->
+  <section class="document-section">
+    <div class="section-header">
+      <h2>⭐ Most Popular</h2>
+    </div>
+    
+    @if (popularDocuments$ | async; as popularDocs) {
+      @if (popularDocs.length > 0) {
+        <div class="document-grid">
+          @for (doc of popularDocs; track doc.id) {
+            <app-document-card 
+              [document]="doc"
+              [showActions]="false"
+              (cardClicked)="navigateToDocument(doc.id)">
+            </app-document-card>
+          }
+        </div>
+      } @else {
+        <p class="empty-state">No popular documents yet.</p>
+      }
+    } @else {
+      <div class="loading-state">
+        <p>Loading popular documents...</p>
+      </div>
+    }
+  </section>
+
+  <!-- Section 3: User's Documents -->
+  <section class="document-section">
+    <div class="section-header">
+      <h2>📝 My Documents</h2>
+      <button 
+        mat-raised-button 
+        color="primary" 
+        routerLink="/documents/upload"
+        class="upload-button">
+        + Upload New Document
+      </button>
+    </div>
+    
+    @if (userDocuments$ | async; as userDocs) {
+      @if (userDocs.length > 0) {
+        <div class="document-grid">
+          @for (doc of userDocs; track doc.id) {
+            <app-document-card 
+              [document]="doc"
+              [showActions]="true"
+              (cardClicked)="navigateToDocument(doc.id)">
+            </app-document-card>
+          }
+        </div>
+      } @else {
+        <div class="empty-state-with-action">
+          <p>You haven't uploaded any documents yet.</p>
+          <button 
+            mat-raised-button 
+            color="primary" 
+            routerLink="/documents/upload">
+            Upload Your First Document
+          </button>
+        </div>
+      }
+    } @else {
+      <div class="loading-state">
+        <p>Loading your documents...</p>
+      </div>
+    }
+  </section>
+</div>
+
+<app-footer></app-footer>

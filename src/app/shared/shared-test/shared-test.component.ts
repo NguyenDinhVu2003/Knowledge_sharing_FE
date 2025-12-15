@@ -28,12 +28,15 @@ export class SharedTestComponent {
       summary: 'This comprehensive guide covers the fundamentals of Angular components, including component lifecycle, data binding, and component communication. Learn how to build reusable and maintainable components.',
       file_path: '/documents/angular-intro.pdf',
       file_type: 'pdf',
+      file_size: 1024000,
       owner_id: 1,
+      owner_name: 'John Doe',
       sharing_level: 'public',
       created_at: new Date('2024-01-15'),
       updated_at: new Date('2024-01-20'),
       version_number: 2,
-      is_archived: false
+      is_archived: false,
+      average_rating: 4.5
     },
     {
       id: 2,
@@ -41,12 +44,15 @@ export class SharedTestComponent {
       summary: 'Explore advanced TypeScript patterns and best practices for enterprise applications. This document includes type safety, generics, decorators, and more.',
       file_path: '/documents/typescript-guide.docx',
       file_type: 'docx',
+      file_size: 512000,
       owner_id: 2,
+      owner_name: 'Jane Smith',
       sharing_level: 'group',
       created_at: new Date('2024-02-10'),
       updated_at: new Date('2024-02-10'),
       version_number: 1,
-      is_archived: false
+      is_archived: false,
+      average_rating: 4.8
     },
     {
       id: 3,
@@ -54,12 +60,15 @@ export class SharedTestComponent {
       summary: 'Master RxJS operators with practical examples and use cases. Learn about map, filter, switchMap, and more essential operators.',
       file_path: '/documents/rxjs-operators.pdf',
       file_type: 'pdf',
+      file_size: 768000,
       owner_id: 1,
+      owner_name: 'John Doe',
       sharing_level: 'private',
       created_at: new Date('2024-03-05'),
       updated_at: new Date('2024-03-15'),
       version_number: 3,
-      is_archived: false
+      is_archived: false,
+      average_rating: 4.9
     },
     {
       id: 4,
@@ -67,12 +76,15 @@ export class SharedTestComponent {
       summary: 'Complete guide to implementing Material Design in Angular applications. Covers theming, components, and responsive layouts.',
       file_path: '/documents/material-design.pdf',
       file_type: 'pdf',
+      file_size: 2048000,
       owner_id: 3,
+      owner_name: 'Mike Johnson',
       sharing_level: 'public',
       created_at: new Date('2023-12-01'),
       updated_at: new Date('2023-12-01'),
       version_number: 1,
-      is_archived: true
+      is_archived: true,
+      average_rating: 4.3
     }
   ]);
 
