@@ -1,6 +1,47 @@
-# KnowledgeSharingFrontend
+# Internal Knowledge Sharing Platform - Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.3.
+Angular-based frontend application for the Internal Knowledge Sharing Platform.
+
+## Project Setup (FE-1) ✅
+
+This project has been configured with the following features:
+
+### Technologies
+- **Angular**: v20.3.0 (latest stable)
+- **UI Framework**: Angular Material (Rose/Red theme)
+- **HTTP Client**: Configured with `provideHttpClient` and fetch API
+- **Routing**: Enabled and configured
+
+### Environment Configuration
+
+Two environments have been set up:
+
+#### Development (`src/environments/environment.development.ts`)
+```typescript
+{
+  production: false,
+  apiUrl: 'http://localhost:8080/api'
+}
+```
+
+#### Production (`src/environments/environment.ts`)
+```typescript
+{
+  production: true,
+  apiUrl: 'http://localhost:8080/api'
+}
+```
+
+The `angular.json` is configured to automatically use the correct environment file based on the build configuration.
+
+### Key Features Implemented
+
+1. ✅ **Routing**: Enabled with `provideRouter` in `app.config.ts`
+2. ✅ **HTTP Client**: Configured with `provideHttpClient(withFetch())` for API communication
+3. ✅ **Angular Material**: Installed and configured with animations support
+4. ✅ **Environment Management**: Development and production configurations with file replacements
+5. ✅ **Basic App Structure**: AppComponent with router outlet ready for feature modules
+
 
 ## Development server
 
@@ -44,16 +85,50 @@ To execute unit tests with the [Karma](https://karma-runner.github.io) test runn
 ng test
 ```
 
-## Running end-to-end tests
 
-For end-to-end (e2e) testing, run:
+## Project Structure
 
-```bash
-ng e2e
+```
+src/
+├── app/
+│   ├── app.config.ts          # Application configuration with providers
+│   ├── app.routes.ts          # Application routing configuration
+│   ├── app.ts                 # Root component
+│   ├── app.html               # Root template with router outlet
+│   └── app.css                # Root component styles
+├── environments/
+│   ├── environment.ts         # Production environment config
+│   └── environment.development.ts  # Development environment config
+├── index.html
+├── main.ts
+└── styles.css                 # Global styles
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## Next Steps
 
-## Additional Resources
+The application is now ready for feature module development:
+- Authentication module
+- User management
+- Article/knowledge management
+- Search and filtering
+- Categories and tags
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## Backend API
+
+The application expects a Spring Boot backend running at:
+- **Development**: `http://localhost:8080/api`
+- **Production**: `http://localhost:8080/api` (update in production environment file)
+
+## Additional Commands
+
+- **Run tests**: `ng test`
+- **Generate component**: `ng generate component <name>`
+- **Generate service**: `ng generate service <name>`
+- **Generate module**: `ng generate module <name>`
+
+## Notes
+
+- Angular Material theme: Rose/Red
+- The project uses zoneless change detection for better performance
+- Server-side rendering (SSR) is configured but can be disabled if not needed
+
