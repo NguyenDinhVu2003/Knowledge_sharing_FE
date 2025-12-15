@@ -5,6 +5,8 @@ import { Observable, of } from 'rxjs';
 
 // Material Modules
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 // Core Services and Models
 import { AuthService } from '../../core/services/auth.service';
@@ -15,6 +17,7 @@ import { User, Document } from '../../core/models';
 import { HeaderComponent } from '../../shared/components/header/header.component';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { DocumentCardComponent } from '../../shared/components/document-card/document-card.component';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-home',
@@ -23,9 +26,12 @@ import { DocumentCardComponent } from '../../shared/components/document-card/doc
     CommonModule,
     RouterModule,
     MatButtonModule,
+    MatDialogModule,
+    MatSnackBarModule,
     HeaderComponent,
     FooterComponent,
-    DocumentCardComponent
+    DocumentCardComponent,
+    ConfirmDialogComponent
   ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
@@ -34,6 +40,8 @@ export class HomeComponent implements OnInit {
   private authService = inject(AuthService);
   private documentService = inject(DocumentService);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
   
   recentDocuments$!: Observable<Document[]>;
   popularDocuments$!: Observable<Document[]>;
@@ -73,7 +81,6 @@ export class HomeComponent implements OnInit {
    * Handle action clicks from document cards
    */
   onActionClicked(event: { action: string; documentId: number }): void {
-    console.log('Home - Action clicked:', event);
     switch (event.action) {
       case 'view':
         this.router.navigate(['/documents', event.documentId]);
@@ -82,10 +89,48 @@ export class HomeComponent implements OnInit {
         this.router.navigate(['/documents', event.documentId, 'edit']);
         break;
       case 'delete':
-        console.log('Delete document:', event.documentId);
-        // TODO: Implement delete with confirmation dialog
+        this.confirmAndDelete(event.documentId);
         break;
     }
+  }
+
+  confirmAndDelete(documentId: number): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Delete Document',
+        message: 'Are you sure you want to delete this document? This action cannot be undone.',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        type: 'danger'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.documentService.deleteDocument(documentId).subscribe({
+          next: () => {
+            this.snackBar.open('Document deleted successfully', 'Close', {
+              duration: 3000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top'
+            });
+            // Reload all document lists
+            this.recentDocuments$ = this.documentService.getRecentDocuments(5);
+            this.popularDocuments$ = this.documentService.getPopularDocuments(5);
+            this.userDocuments$ = this.documentService.getUserDocuments(5);
+          },
+          error: (err) => {
+            console.error('Error deleting document:', err);
+            this.snackBar.open('Failed to delete document', 'Close', {
+              duration: 3000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top'
+            });
+          }
+        });
+      }
+    });
   }
 
   /**
