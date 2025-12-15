@@ -74,11 +74,15 @@ export class DocumentDetailComponent implements OnInit {
   }
 
   loadDocument(id: number): void {
+    console.log('loadDocument started, setting loading = true');
     this.loading = true;
     this.documentService.getDocumentById(id).subscribe({
       next: (doc) => {
+        console.log('Document received in component:', doc.title);
+        console.log('Setting document and loading = false');
         this.document = doc;
         this.loading = false;
+        console.log('After setting: loading =', this.loading, 'document =', this.document?.title);
         
         // Check if current user is owner
         const currentUser = this.authService.getCurrentUser();

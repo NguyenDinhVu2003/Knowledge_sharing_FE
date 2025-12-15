@@ -19,8 +19,9 @@
           @for (doc of recentDocs; track doc.id) {
             <app-document-card 
               [document]="doc"
-              [showActions]="false"
-              (cardClicked)="navigateToDocument(doc.id)">
+              [showActions]="true"
+              (cardClicked)="navigateToDocument(doc.id)"
+              (actionClicked)="onActionClicked($event)">
             </app-document-card>
           }
         </div>
@@ -46,8 +47,9 @@
           @for (doc of popularDocs; track doc.id) {
             <app-document-card 
               [document]="doc"
-              [showActions]="false"
-              (cardClicked)="navigateToDocument(doc.id)">
+              [showActions]="true"
+              (cardClicked)="navigateToDocument(doc.id)"
+              (actionClicked)="onActionClicked($event)">
             </app-document-card>
           }
         </div>
@@ -81,7 +83,8 @@
             <app-document-card 
               [document]="doc"
               [showActions]="true"
-              (cardClicked)="navigateToDocument(doc.id)">
+              (cardClicked)="navigateToDocument(doc.id)"
+              (actionClicked)="onActionClicked($event)">
             </app-document-card>
           }
         </div>

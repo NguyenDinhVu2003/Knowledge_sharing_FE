@@ -65,7 +65,27 @@ export class HomeComponent implements OnInit {
    * @param documentId - ID of the document to view
    */
   navigateToDocument(documentId: number): void {
+    console.log('Navigating to document:', documentId);
     this.router.navigate(['/documents', documentId]);
+  }
+
+  /**
+   * Handle action clicks from document cards
+   */
+  onActionClicked(event: { action: string; documentId: number }): void {
+    console.log('Home - Action clicked:', event);
+    switch (event.action) {
+      case 'view':
+        this.router.navigate(['/documents', event.documentId]);
+        break;
+      case 'edit':
+        this.router.navigate(['/documents', event.documentId, 'edit']);
+        break;
+      case 'delete':
+        console.log('Delete document:', event.documentId);
+        // TODO: Implement delete with confirmation dialog
+        break;
+    }
   }
 
   /**

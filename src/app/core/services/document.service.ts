@@ -326,19 +326,28 @@ export class DocumentService {
   }
 
   /**
-   * Get document by ID
+   * Get a specific document by ID
    * @param id - Document ID
    * @returns Observable of Document
    */
   getDocumentById(id: number): Observable<Document> {
+    console.log('getDocumentById called with id:', id);
+    console.log('Available mock documents:', this.mockDocuments.map(d => d.id));
+    
     // MOCK IMPLEMENTATION - Replace with actual API call when backend is ready
     const document = this.mockDocuments.find(doc => doc.id === id);
     
     if (!document) {
-      throw new Error(`Document with id ${id} not found`);
+      console.error(`Document with id ${id} not found`);
+      return throwError(() => new Error(`Document with id ${id} not found`));
     }
     
-    return of(document).pipe(delay(300));
+    console.log('Document found:', document.title);
+    console.log('Returning observable with document');
+    
+    // Remove delay temporarily to debug
+    return of(document);
+    // return of(document).pipe(delay(300));
 
     /* ACTUAL API IMPLEMENTATION - Uncomment when backend is ready
     return this.http.get<Document>(`${this.apiUrl}/documents/${id}`);
