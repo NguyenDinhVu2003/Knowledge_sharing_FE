@@ -48,8 +48,8 @@
           </button>
           
           <button mat-raised-button (click)="toggleFavorite()">
-            <mat-icon>{{ isFavorite ? 'favorite' : 'favorite_border' }}</mat-icon>
-            {{ isFavorite ? 'Favorited' : 'Add to Favorites' }}
+            <mat-icon>{{ isFavorited ? 'favorite' : 'favorite_border' }}</mat-icon>
+            {{ isFavorited ? 'Favorited' : 'Add to Favorites' }}
           </button>
 
           @if (isOwner) {

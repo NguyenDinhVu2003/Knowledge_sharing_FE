@@ -30,8 +30,7 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
     MatSnackBarModule,
     HeaderComponent,
     FooterComponent,
-    DocumentCardComponent,
-    ConfirmDialogComponent
+    DocumentCardComponent
   ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']

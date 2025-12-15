@@ -24,7 +24,9 @@
         <span>My Documents</span>
       </a>
       <a mat-button routerLink="/favorites" routerLinkActive="active">
-        <mat-icon>star</mat-icon>
+        <mat-icon [matBadge]="favoriteCount$ | async" [matBadgeHidden]="(favoriteCount$ | async) === 0" matBadgeColor="accent" matBadgeSize="small">
+          star
+        </mat-icon>
         <span>Favorites</span>
       </a>
       <a mat-button routerLink="/notifications" routerLinkActive="active">
@@ -83,7 +85,9 @@
       <span>My Documents</span>
     </a>
     <a mat-button routerLink="/favorites" routerLinkActive="active" (click)="closeMobileMenu()">
-      <mat-icon>star</mat-icon>
+      <mat-icon [matBadge]="favoriteCount$ | async" [matBadgeHidden]="(favoriteCount$ | async) === 0" matBadgeColor="accent">
+        star
+      </mat-icon>
       <span>Favorites</span>
     </a>
     <a mat-button routerLink="/notifications" routerLinkActive="active" (click)="closeMobileMenu()">

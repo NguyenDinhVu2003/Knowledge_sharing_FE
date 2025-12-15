@@ -15,6 +15,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Document, DocumentVersion } from '../../../core/models/document.model';
 import { DocumentService } from '../../../core/services/document.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { FavoriteService } from '../../../core/services/favorite.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { DocumentCardComponent } from '../../../shared/components/document-card/document-card.component';
@@ -46,6 +47,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
 export class DocumentDetailComponent implements OnInit {
   private documentService = inject(DocumentService);
   private authService = inject(AuthService);
+  private favoriteService = inject(FavoriteService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private sanitizer = inject(DomSanitizer);
@@ -64,7 +66,8 @@ export class DocumentDetailComponent implements OnInit {
   userRating = 0;
   ratingStars = [1, 2, 3, 4, 5];
   isOwner = false;
-  isFavorite = false;
+  isFavorited = false;
+  favoriteId: number | null = null;
 
   ngOnInit(): void {
     const docId = this.route.snapshot.paramMap.get('id');
@@ -143,11 +146,17 @@ export class DocumentDetailComponent implements OnInit {
   }
 
   checkFavoriteStatus(docId: number): void {
-    // Mock implementation - would check against user's favorites in real app
-    if (isPlatformBrowser(this.platformId)) {
-      const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-      this.isFavorite = favorites.includes(docId);
-    }
+    this.favoriteService.isFavorited(docId).subscribe(favorited => {
+      this.isFavorited = favorited;
+      
+      // Get the favorite ID if it's favorited
+      if (favorited) {
+        this.favoriteService.getFavorites().subscribe(favorites => {
+          const favorite = favorites.find(f => f.documentId === docId);
+          this.favoriteId = favorite ? favorite.id : null;
+        });
+      }
+    });
   }
 
   rateDocument(rating: number): void {
@@ -170,26 +179,53 @@ export class DocumentDetailComponent implements OnInit {
 
   toggleFavorite(): void {
     if (!this.document) return;
-    
-    this.isFavorite = !this.isFavorite;
-    
-    // Mock implementation - would call API in real app
-    if (isPlatformBrowser(this.platformId)) {
-      const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-      if (this.isFavorite) {
-        favorites.push(this.document.id);
-      } else {
-        const index = favorites.indexOf(this.document.id);
-        if (index > -1) favorites.splice(index, 1);
-      }
-      localStorage.setItem('favorites', JSON.stringify(favorites));
+
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser) {
+      this.snackBar.open('Please login to manage favorites', 'Close', { duration: 3000 });
+      return;
     }
     
-    this.snackBar.open(
-      this.isFavorite ? 'Added to favorites' : 'Removed from favorites',
-      'Close',
-      { duration: 2000 }
-    );
+    if (this.isFavorited && this.favoriteId) {
+      // Remove from favorites
+      this.favoriteService.removeFavorite(this.favoriteId).subscribe({
+        next: () => {
+          this.isFavorited = false;
+          this.favoriteId = null;
+          const snackBarRef = this.snackBar.open('Removed from favorites', 'Undo', { duration: 3000 });
+          
+          snackBarRef.onAction().subscribe(() => {
+            if (this.document) {
+              this.addToFavorites(this.document);
+            }
+          });
+        },
+        error: (error) => {
+          console.error('Error removing favorite:', error);
+          this.snackBar.open('Failed to remove from favorites', 'Close', { duration: 3000 });
+        }
+      });
+    } else {
+      // Add to favorites
+      this.addToFavorites(this.document);
+    }
+  }
+
+  private addToFavorites(document: Document): void {
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser) return;
+
+    this.favoriteService.addFavorite(document.id).subscribe({
+      next: (favorite) => {
+        this.isFavorited = true;
+        this.favoriteId = favorite.id;
+        this.snackBar.open('Added to favorites', 'Close', { duration: 2000 });
+      },
+      error: (error) => {
+        console.error('Error adding favorite:', error);
+        this.snackBar.open('Failed to add to favorites', 'Close', { duration: 3000 });
+      }
+    });
   }
 
   downloadDocument(): void {

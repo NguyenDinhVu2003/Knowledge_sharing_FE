@@ -22,6 +22,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'favorites',
+    loadChildren: () => import('./features/favorites/favorites.module').then(m => m.FavoritesModule),
+    canActivate: [authGuard]
+  },
+  {
     path: 'test-shared',
     loadComponent: () => import('./shared/shared-test/shared-test.component').then(m => m.SharedTestComponent),
     title: 'Shared Components Test'

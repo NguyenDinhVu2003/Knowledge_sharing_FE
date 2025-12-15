@@ -1,0 +1,157 @@
+<app-header></app-header>
+
+<div class="favorites-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="title-section">
+      <h1>
+        <mat-icon>favorite</mat-icon>
+        My Favorites
+      </h1>
+      <p class="subtitle">Documents you've saved for quick access</p>
+    </div>
+    <div class="stats">
+      <mat-chip highlighted>
+        {{ (favorites$ | async)?.length || 0 }} document(s)
+      </mat-chip>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <mat-spinner></mat-spinner>
+    <p>Loading your favorites...</p>
+  </div>
+
+  <!-- Empty State -->
+  <mat-card *ngIf="!loading && (favorites$ | async)?.length === 0" class="empty-state">
+    <mat-icon>favorite_border</mat-icon>
+    <h2>No favorites yet</h2>
+    <p>Save documents you want to revisit by clicking the heart icon</p>
+    <div class="actions">
+      <button mat-raised-button color="primary" routerLink="/search">
+        <mat-icon>search</mat-icon>
+        Search Documents
+      </button>
+      <button mat-stroked-button routerLink="/documents">
+        <mat-icon>article</mat-icon>
+        Browse All Documents
+      </button>
+    </div>
+  </mat-card>
+
+  <!-- Favorites Content -->
+  <div *ngIf="!loading && (favorites$ | async)?.length! > 0" class="favorites-content">
+    <!-- View Controls -->
+    <div class="view-controls">
+      <!-- View Mode Toggle -->
+      <mat-button-toggle-group [(value)]="viewMode" (change)="onViewModeChange()">
+        <mat-button-toggle value="grid">
+          <mat-icon>grid_view</mat-icon>
+          Grid
+        </mat-button-toggle>
+        <mat-button-toggle value="list">
+          <mat-icon>view_list</mat-icon>
+          List
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+
+      <!-- Sort Dropdown -->
+      <div class="sort-control">
+        <mat-form-field appearance="outline">
+          <mat-label>Sort by</mat-label>
+          <mat-select [(value)]="sortBy" (selectionChange)="onSortChange()">
+            <mat-option value="recent">Recently Added</mat-option>
+            <mat-option value="oldest">Oldest First</mat-option>
+            <mat-option value="title">Title A-Z</mat-option>
+            <mat-option value="rating">Highest Rated</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Grid View -->
+    <div *ngIf="viewMode === 'grid'" class="favorites-grid">
+      <div *ngFor="let favorite of sortedFavorites$ | async" class="favorite-item">
+        <!-- Document Card -->
+        <app-document-card 
+          *ngIf="favorite.document"
+          [document]="favorite.document"
+          [showActions]="false"
+          (cardClicked)="navigateToDocument($event)">
+        </app-document-card>
+        
+        <!-- Remove Button (floating) -->
+        <button mat-mini-fab 
+                color="accent" 
+                class="remove-btn"
+                (click)="confirmRemove(favorite); $event.stopPropagation()"
+                matTooltip="Remove from favorites">
+          <mat-icon>favorite</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- List View -->
+    <mat-card *ngIf="viewMode === 'list'" class="list-view">
+      <mat-list>
+        <mat-list-item *ngFor="let favorite of sortedFavorites$ | async; let last = last"
+                       class="favorite-list-item"
+                       (click)="navigateToDocument(favorite.documentId)">
+          
+          <!-- File Type Icon -->
+          <mat-icon matListItemIcon [class]="getFileTypeClass(favorite.document!.file_type)">
+            {{ getFileTypeIcon(favorite.document!.file_type) }}
+          </mat-icon>
+
+          <!-- Document Title + Tags -->
+          <div matListItemTitle class="list-title">
+            {{ favorite.document!.title }}
+            <mat-chip-set class="inline-tags" *ngIf="favorite.document!.tags && favorite.document!.tags.length > 0">
+              <mat-chip *ngFor="let tag of favorite.document!.tags.slice(0, 3)">
+                {{ tag }}
+              </mat-chip>
+            </mat-chip-set>
+          </div>
+
+          <!-- Meta Info (owner, rating, date) -->
+          <div matListItemLine class="list-meta">
+            <span class="owner">
+              <mat-icon inline>person</mat-icon>
+              {{ favorite.document!.owner_name }}
+            </span>
+            <span class="rating">
+              <mat-icon inline>star</mat-icon>
+              {{ favorite.document!.average_rating || 'N/A' }}
+            </span>
+            <span class="date">
+              <mat-icon inline>access_time</mat-icon>
+              Added {{ favorite.createdAt | date:'short' }}
+            </span>
+          </div>
+
+          <!-- Remove Button -->
+          <div matListItemMeta>
+            <button mat-icon-button 
+                    (click)="confirmRemove(favorite); $event.stopPropagation()"
+                    matTooltip="Remove from favorites">
+              <mat-icon color="accent">favorite</mat-icon>
+            </button>
+          </div>
+
+          <mat-divider *ngIf="!last"></mat-divider>
+        </mat-list-item>
+      </mat-list>
+    </mat-card>
+
+    <!-- Bulk Actions -->
+    <div class="bulk-actions">
+      <button mat-stroked-button color="warn" (click)="confirmRemoveAll()">
+        <mat-icon>delete_sweep</mat-icon>
+        Clear All Favorites
+      </button>
+    </div>
+  </div>
+</div>
+
+<app-footer></app-footer>
