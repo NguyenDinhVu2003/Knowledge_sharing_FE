@@ -101,13 +101,13 @@ export class AuthService {
     this.http.post(`${this.apiUrl}/auth/logout`, {}).subscribe({
       next: () => {
         this.clearAuthData();
-        this.router.navigate(['/login']);
+        this.router.navigate(['/auth/login']);
       },
       error: (error) => {
         console.error('Logout error:', error);
         // Clear local data even if backend call fails
         this.clearAuthData();
-        this.router.navigate(['/login']);
+        this.router.navigate(['/auth/login']);
       }
     });
   }

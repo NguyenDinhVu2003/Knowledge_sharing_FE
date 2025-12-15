@@ -35,7 +35,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       // If 401 Unauthorized, logout and redirect to login
       if (error.status === 401) {
         authService.logout();
-        router.navigate(['/login']);
+        router.navigate(['/auth/login']);
       }
       return throwError(() => error);
     })
