@@ -1,0 +1,99 @@
+<div class="test-page">
+  <!-- Header Component Test -->
+  <app-header 
+    [unreadNotifications]="unreadNotifications()"
+    [currentUser]="currentUser()"
+    (logoutClicked)="onLogout()">
+  </app-header>
+
+  <!-- Main Content -->
+  <div class="test-content">
+    <div class="container">
+      <h1>Shared Components Test Page</h1>
+      <p class="subtitle">Testing HeaderComponent, FooterComponent, and DocumentCardComponent</p>
+
+      <!-- Control Panel -->
+      <section class="control-panel">
+        <h2>Controls</h2>
+        <div class="controls">
+          <button mat-raised-button color="primary" (click)="toggleUser()">
+            {{ currentUser() ? 'Logout User' : 'Login User' }}
+          </button>
+          <button mat-raised-button color="accent" (click)="addNotification()">
+            Add Notification
+          </button>
+          <button mat-raised-button (click)="clearNotifications()">
+            Clear Notifications
+          </button>
+        </div>
+
+        <div class="status">
+          <p><strong>Current User:</strong> {{ currentUser()?.username || 'Not logged in' }}</p>
+          <p><strong>Unread Notifications:</strong> {{ unreadNotifications() }}</p>
+        </div>
+      </section>
+
+      <!-- Document Cards Grid -->
+      <section class="documents-section">
+        <h2>Document Cards</h2>
+        
+        <div class="cards-grid">
+          @for (doc of sampleDocuments(); track doc.id) {
+            <app-document-card
+              [document]="doc"
+              [showActions]="true"
+              (cardClicked)="onCardClick($event)"
+              (actionClicked)="onActionClick($event)">
+            </app-document-card>
+          }
+        </div>
+      </section>
+
+      <!-- Component Information -->
+      <section class="info-section">
+        <h2>Component Information</h2>
+        
+        <div class="info-grid">
+          <div class="info-card">
+            <h3>HeaderComponent</h3>
+            <ul>
+              <li>✅ Logo and title</li>
+              <li>✅ Navigation menu</li>
+              <li>✅ User dropdown</li>
+              <li>✅ Notification badge</li>
+              <li>✅ Responsive (mobile menu)</li>
+              <li>✅ Material Design</li>
+            </ul>
+          </div>
+
+          <div class="info-card">
+            <h3>FooterComponent</h3>
+            <ul>
+              <li>✅ Copyright text</li>
+              <li>✅ Dynamic year</li>
+              <li>✅ Minimalist design</li>
+              <li>✅ Responsive</li>
+            </ul>
+          </div>
+
+          <div class="info-card">
+            <h3>DocumentCardComponent</h3>
+            <ul>
+              <li>✅ Document title</li>
+              <li>✅ Truncated summary (150 chars)</li>
+              <li>✅ Sharing level indicator</li>
+              <li>✅ Metadata (type, owner, date)</li>
+              <li>✅ Star rating</li>
+              <li>✅ Action buttons</li>
+              <li>✅ Hover effects</li>
+              <li>✅ Archived badge</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Footer Component Test -->
+  <app-footer></app-footer>
+</div>

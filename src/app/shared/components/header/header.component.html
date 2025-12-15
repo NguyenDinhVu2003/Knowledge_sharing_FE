@@ -1,0 +1,105 @@
+<mat-toolbar color="primary" class="header-toolbar">
+  <div class="header-container">
+    <!-- Logo and Title -->
+    <div class="logo-section">
+      <button mat-icon-button class="menu-button" (click)="toggleMobileMenu()" aria-label="Toggle menu">
+        <mat-icon>{{ mobileMenuOpen() ? 'close' : 'menu' }}</mat-icon>
+      </button>
+      <mat-icon class="app-icon">school</mat-icon>
+      <span class="app-title" routerLink="/">Knowledge Sharing Platform</span>
+    </div>
+
+    <!-- Desktop Navigation -->
+    <nav class="desktop-nav" aria-label="Main navigation">
+      <a mat-button routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+        <mat-icon>home</mat-icon>
+        <span>Home</span>
+      </a>
+      <a mat-button routerLink="/search" routerLinkActive="active">
+        <mat-icon>search</mat-icon>
+        <span>Search</span>
+      </a>
+      <a mat-button routerLink="/my-documents" routerLinkActive="active">
+        <mat-icon>folder</mat-icon>
+        <span>My Documents</span>
+      </a>
+      <a mat-button routerLink="/favorites" routerLinkActive="active">
+        <mat-icon>star</mat-icon>
+        <span>Favorites</span>
+      </a>
+      <a mat-button routerLink="/notifications" routerLinkActive="active">
+        <mat-icon [matBadge]="unreadNotifications" [matBadgeHidden]="unreadNotifications === 0" matBadgeColor="warn" matBadgeSize="small">
+          notifications
+        </mat-icon>
+        <span>Notifications</span>
+      </a>
+    </nav>
+
+    <!-- User Menu -->
+    <div class="user-section" *ngIf="currentUser">
+      <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="User menu">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+      <mat-menu #userMenu="matMenu">
+        <div class="user-info" mat-menu-item disabled>
+          <mat-icon>person</mat-icon>
+          <span>{{ currentUser.username }}</span>
+        </div>
+        <mat-divider></mat-divider>
+        <button mat-menu-item routerLink="/profile">
+          <mat-icon>settings</mat-icon>
+          <span>Profile / Interests</span>
+        </button>
+        <button mat-menu-item (click)="onLogout()">
+          <mat-icon>logout</mat-icon>
+          <span>Logout</span>
+        </button>
+      </mat-menu>
+    </div>
+
+    <!-- Login button for non-authenticated users -->
+    <div class="user-section" *ngIf="!currentUser">
+      <button mat-raised-button color="accent" routerLink="/login">
+        <mat-icon>login</mat-icon>
+        Login
+      </button>
+    </div>
+  </div>
+</mat-toolbar>
+
+<!-- Mobile Navigation Menu -->
+<div class="mobile-nav" [class.open]="mobileMenuOpen()" *ngIf="mobileMenuOpen()">
+  <nav aria-label="Mobile navigation">
+    <a mat-button routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMobileMenu()">
+      <mat-icon>home</mat-icon>
+      <span>Home</span>
+    </a>
+    <a mat-button routerLink="/search" routerLinkActive="active" (click)="closeMobileMenu()">
+      <mat-icon>search</mat-icon>
+      <span>Search</span>
+    </a>
+    <a mat-button routerLink="/my-documents" routerLinkActive="active" (click)="closeMobileMenu()">
+      <mat-icon>folder</mat-icon>
+      <span>My Documents</span>
+    </a>
+    <a mat-button routerLink="/favorites" routerLinkActive="active" (click)="closeMobileMenu()">
+      <mat-icon>star</mat-icon>
+      <span>Favorites</span>
+    </a>
+    <a mat-button routerLink="/notifications" routerLinkActive="active" (click)="closeMobileMenu()">
+      <mat-icon [matBadge]="unreadNotifications" [matBadgeHidden]="unreadNotifications === 0" matBadgeColor="warn">
+        notifications
+      </mat-icon>
+      <span>Notifications</span>
+    </a>
+    <mat-divider *ngIf="currentUser"></mat-divider>
+    <a mat-button routerLink="/profile" *ngIf="currentUser" (click)="closeMobileMenu()">
+      <mat-icon>settings</mat-icon>
+      <span>Profile / Interests</span>
+    </a>
+    <button mat-button *ngIf="currentUser" (click)="onLogout(); closeMobileMenu()">
+      <mat-icon>logout</mat-icon>
+      <span>Logout</span>
+    </button>
+  </nav>
+</div>

@@ -1,0 +1,151 @@
+.test-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.test-content {
+  flex: 1;
+  padding: 24px;
+  background-color: #fafafa;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 500;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.subtitle {
+  color: #666;
+  font-size: 1rem;
+  margin: 0 0 32px 0;
+}
+
+h2 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #333;
+  margin: 24px 0 16px 0;
+}
+
+// Control Panel
+.control-panel {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 32px;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.status {
+  padding: 16px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  border-left: 4px solid #3f51b5;
+
+  p {
+    margin: 8px 0;
+    font-size: 0.875rem;
+
+    strong {
+      color: #3f51b5;
+    }
+  }
+}
+
+// Documents Section
+.documents-section {
+  margin-bottom: 32px;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+  margin-top: 16px;
+}
+
+// Info Section
+.info-section {
+  margin-bottom: 32px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-top: 16px;
+}
+
+.info-card {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  h3 {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: #3f51b5;
+    margin: 0 0 16px 0;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 0.875rem;
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .test-content {
+    padding: 16px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .controls {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+}

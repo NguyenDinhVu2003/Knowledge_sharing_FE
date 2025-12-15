@@ -1,0 +1,74 @@
+<mat-card class="document-card" (click)="onCardClick()" [class.archived]="document.is_archived">
+  <mat-card-header>
+    <div class="card-header-content">
+      <mat-card-title class="document-title" [matTooltip]="document.title">
+        {{ document.title }}
+      </mat-card-title>
+      <mat-chip class="sharing-chip" [style.background-color]="getSharingLevelInfo().color">
+        <span class="sharing-icon">{{ getSharingLevelInfo().icon }}</span>
+        <span class="sharing-label">{{ getSharingLevelInfo().label }}</span>
+      </mat-chip>
+    </div>
+  </mat-card-header>
+
+  <mat-card-content>
+    <p class="document-summary">{{ getTruncatedSummary() }}</p>
+
+    <div class="document-meta">
+      <div class="meta-item">
+        <mat-icon class="meta-icon">description</mat-icon>
+        <span class="meta-text">{{ document.file_type.toUpperCase() }}</span>
+      </div>
+      
+      <div class="meta-item">
+        <mat-icon class="meta-icon">person</mat-icon>
+        <span class="meta-text">Owner ID: {{ document.owner_id }}</span>
+      </div>
+
+      <div class="meta-item">
+        <mat-icon class="meta-icon">calendar_today</mat-icon>
+        <span class="meta-text">{{ formatDate(document.created_at) }}</span>
+      </div>
+
+      <div class="meta-item">
+        <mat-icon class="meta-icon">update</mat-icon>
+        <span class="meta-text">v{{ document.version_number }}</span>
+      </div>
+    </div>
+
+    <!-- Star Rating Display (Read-only) -->
+    <div class="rating-container">
+      @for (star of getStarArray(); track $index) {
+        <mat-icon class="star-icon" [class.filled]="isStarFilled($index)">
+          {{ isStarFilled($index) ? 'star' : 'star_border' }}
+        </mat-icon>
+      }
+    </div>
+
+    <!-- Archived Badge -->
+    @if (document.is_archived) {
+      <div class="archived-badge">
+        <mat-icon>archive</mat-icon>
+        <span>Archived</span>
+      </div>
+    }
+  </mat-card-content>
+
+  <!-- Action Buttons -->
+  @if (showActions) {
+    <mat-card-actions class="card-actions">
+      <button mat-button color="primary" (click)="onActionClick('view', $event)" aria-label="View document">
+        <mat-icon>visibility</mat-icon>
+        View
+      </button>
+      <button mat-button color="accent" (click)="onActionClick('edit', $event)" aria-label="Edit document">
+        <mat-icon>edit</mat-icon>
+        Edit
+      </button>
+      <button mat-button color="warn" (click)="onActionClick('delete', $event)" aria-label="Delete document">
+        <mat-icon>delete</mat-icon>
+        Delete
+      </button>
+    </mat-card-actions>
+  }
+</mat-card>
