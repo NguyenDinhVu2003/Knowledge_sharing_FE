@@ -30,7 +30,7 @@
         <span>Favorites</span>
       </a>
       <a mat-button routerLink="/notifications" routerLinkActive="active">
-        <mat-icon [matBadge]="unreadNotifications" [matBadgeHidden]="unreadNotifications === 0" matBadgeColor="warn" matBadgeSize="small">
+        <mat-icon [matBadge]="unreadNotificationCount$ | async" [matBadgeHidden]="(unreadNotificationCount$ | async) === 0" matBadgeColor="warn" matBadgeSize="small">
           notifications
         </mat-icon>
         <span>Notifications</span>
@@ -91,7 +91,7 @@
       <span>Favorites</span>
     </a>
     <a mat-button routerLink="/notifications" routerLinkActive="active" (click)="closeMobileMenu()">
-      <mat-icon [matBadge]="unreadNotifications" [matBadgeHidden]="unreadNotifications === 0" matBadgeColor="warn">
+      <mat-icon [matBadge]="unreadNotificationCount$ | async" [matBadgeHidden]="(unreadNotificationCount$ | async) === 0" matBadgeColor="warn">
         notifications
       </mat-icon>
       <span>Notifications</span>

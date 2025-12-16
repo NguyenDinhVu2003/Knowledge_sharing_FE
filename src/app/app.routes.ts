@@ -27,6 +27,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'notifications',
+    loadChildren: () => import('./features/notifications/notifications.module').then(m => m.NotificationsModule),
+    canActivate: [authGuard]
+  },
+  {
     path: 'test-shared',
     loadComponent: () => import('./shared/shared-test/shared-test.component').then(m => m.SharedTestComponent),
     title: 'Shared Components Test'

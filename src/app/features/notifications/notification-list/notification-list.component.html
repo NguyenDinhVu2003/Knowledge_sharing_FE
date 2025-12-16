@@ -1,0 +1,126 @@
+<app-header></app-header>
+
+<div class="notifications-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="title-section">
+      <h1>
+        <mat-icon>notifications</mat-icon>
+        Notifications
+      </h1>
+      <p class="subtitle">Stay updated with relevant documents and activities</p>
+    </div>
+    
+    <div class="header-actions">
+      <mat-chip highlighted color="accent" *ngIf="(unreadCount$ | async)! > 0">
+        {{ unreadCount$ | async }} unread
+      </mat-chip>
+      <button mat-stroked-button (click)="markAllAsRead()" 
+              [disabled]="(unreadCount$ | async) === 0">
+        <mat-icon>done_all</mat-icon>
+        Mark All Read
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter Toggle -->
+  <div class="filter-section">
+    <mat-button-toggle-group [(value)]="filterMode" (change)="onFilterChange()">
+      <mat-button-toggle value="all">
+        <mat-icon>list</mat-icon>
+        All ({{ (notifications$ | async)?.length || 0 }})
+      </mat-button-toggle>
+      <mat-button-toggle value="unread">
+        <mat-icon>mark_email_unread</mat-icon>
+        Unread ({{ unreadCount$ | async }})
+      </mat-button-toggle>
+    </mat-button-toggle-group>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <mat-spinner></mat-spinner>
+    <p>Loading notifications...</p>
+  </div>
+
+  <!-- Empty State -->
+  <mat-card *ngIf="!loading && (filteredNotifications$ | async)?.length === 0" 
+            class="empty-state">
+    <mat-icon>notifications_none</mat-icon>
+    <h2>{{ filterMode === 'unread' ? 'No unread notifications' : 'No notifications yet' }}</h2>
+    <p *ngIf="filterMode === 'all'">
+      You'll receive notifications when:
+    </p>
+    <ul *ngIf="filterMode === 'all'">
+      <li>New documents match your interests</li>
+      <li>Your favorited documents are updated</li>
+      <li>Your documents receive ratings or comments</li>
+    </ul>
+    <button mat-raised-button color="primary" routerLink="/profile">
+      <mat-icon>settings</mat-icon>
+      Manage Interests
+    </button>
+  </mat-card>
+
+  <!-- Notifications List -->
+  <mat-card *ngIf="!loading && (filteredNotifications$ | async)?.length! > 0" 
+            class="notifications-list">
+    <mat-list>
+      <mat-list-item *ngFor="let notification of filteredNotifications$ | async; let last = last"
+                     [class.unread]="!notification.isRead"
+                     class="notification-item"
+                     (click)="markAsRead(notification)">
+        
+        <!-- Notification Icon -->
+        <mat-icon matListItemIcon 
+                  [class.unread-icon]="!notification.isRead"
+                  [color]="!notification.isRead ? 'accent' : ''">
+          {{ getNotificationIcon(notification.message) }}
+        </mat-icon>
+
+        <!-- Notification Content -->
+        <div matListItemTitle class="notification-title">
+          {{ notification.message }}
+          <span *ngIf="!notification.isRead" class="unread-badge">NEW</span>
+        </div>
+
+        <div matListItemLine class="notification-meta">
+          <span class="timestamp">
+            <mat-icon inline>access_time</mat-icon>
+            {{ notification.createdAt | timeAgo }}
+          </span>
+          <span class="document-link" *ngIf="notification.document">
+            Document: {{ notification.document.title }}
+          </span>
+        </div>
+
+        <!-- Actions -->
+        <div matListItemMeta class="notification-actions">
+          <button mat-icon-button 
+                  (click)="markAsRead(notification); $event.stopPropagation()"
+                  *ngIf="!notification.isRead"
+                  matTooltip="Mark as read">
+            <mat-icon>done</mat-icon>
+          </button>
+          <button mat-icon-button 
+                  (click)="deleteNotification(notification); $event.stopPropagation()"
+                  matTooltip="Delete">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+
+        <mat-divider *ngIf="!last"></mat-divider>
+      </mat-list-item>
+    </mat-list>
+  </mat-card>
+
+  <!-- Bulk Actions -->
+  <div class="bulk-actions" *ngIf="(notifications$ | async)?.length! > 0">
+    <button mat-stroked-button color="warn" (click)="clearAll()">
+      <mat-icon>delete_sweep</mat-icon>
+      Clear All Notifications
+    </button>
+  </div>
+</div>
+
+<app-footer></app-footer>

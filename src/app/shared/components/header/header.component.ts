@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal, OnInit, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Observable } from 'rxjs';
@@ -10,6 +10,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { User } from '../../../core/models';
 import { FavoriteService } from '../../../core/services/favorite.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-header',
@@ -27,8 +28,9 @@ import { FavoriteService } from '../../../core/services/favorite.service';
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'
 })
-export class HeaderComponent implements OnInit {
+export class HeaderComponent implements OnInit, OnDestroy {
   private favoriteService = inject(FavoriteService);
+  private notificationService = inject(NotificationService);
 
   @Input() unreadNotifications: number = 0;
   @Input() currentUser: User | null = null;
@@ -38,11 +40,23 @@ export class HeaderComponent implements OnInit {
   // Favorite count
   favoriteCount$!: Observable<number>;
 
+  // Notification count
+  unreadNotificationCount$!: Observable<number>;
+
   // Mobile menu state
   mobileMenuOpen = signal(false);
 
   ngOnInit(): void {
     this.favoriteCount$ = this.favoriteService.getFavoriteCount();
+    this.unreadNotificationCount$ = this.notificationService.getUnreadCount();
+    
+    // Start polling for notifications
+    this.notificationService.startPolling();
+  }
+
+  ngOnDestroy(): void {
+    // Stop polling when component destroyed
+    this.notificationService.stopPolling();
   }
 
   toggleMobileMenu(): void {
