@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, signal, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,6 +9,7 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { User } from '../../../core/models';
+import { AuthService } from '../../../core/services/auth.service';
 import { FavoriteService } from '../../../core/services/favorite.service';
 import { NotificationService } from '../../../core/services/notification.service';
 
@@ -29,6 +30,8 @@ import { NotificationService } from '../../../core/services/notification.service
   styleUrl: './header.component.scss'
 })
 export class HeaderComponent implements OnInit, OnDestroy {
+  private authService = inject(AuthService);
+  private router = inject(Router);
   private favoriteService = inject(FavoriteService);
   private notificationService = inject(NotificationService);
 
@@ -47,6 +50,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
   mobileMenuOpen = signal(false);
 
   ngOnInit(): void {
+    // Nếu currentUser không được truyền vào, tự động lấy từ AuthService
+    if (!this.currentUser) {
+      this.currentUser = this.authService.getCurrentUser();
+    }
+    
     this.favoriteCount$ = this.favoriteService.getFavoriteCount();
     this.unreadNotificationCount$ = this.notificationService.getUnreadCount();
     
@@ -68,6 +76,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   onLogout(): void {
-    this.logoutClicked.emit();
+    // Nếu có listener từ parent component, emit event
+    if (this.logoutClicked.observed) {
+      this.logoutClicked.emit();
+    } else {
+      // Ngược lại, tự xử lý logout
+      this.authService.logout();
+      this.router.navigate(['/auth/login']);
+    }
   }
 }
