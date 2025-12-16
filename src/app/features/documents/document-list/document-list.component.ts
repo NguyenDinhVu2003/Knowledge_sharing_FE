@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { PageEvent } from '@angular/material/paginator';
@@ -47,6 +47,9 @@ export class DocumentListComponent implements OnInit {
   private documentService = inject(DocumentService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  showOnlyMyDocuments: boolean = false;
 
   allDocuments: Document[] = [];
   filteredDocuments: Document[] = [];
@@ -66,7 +69,11 @@ export class DocumentListComponent implements OnInit {
   loading: boolean = true;
 
   ngOnInit(): void {
-    this.loadDocuments();
+    // Kiểm tra xem có phải đang xem My Documents không
+    this.route.data.subscribe(data => {
+      this.showOnlyMyDocuments = data['myDocuments'] === true;
+      this.loadDocuments();
+    });
   }
 
   loadDocuments(): void {
@@ -101,6 +108,14 @@ export class DocumentListComponent implements OnInit {
 
   applyFilters(): void {
     let filtered = [...this.allDocuments];
+
+    // Lọc theo user hiện tại nếu đang ở My Documents
+    if (this.showOnlyMyDocuments) {
+      const currentUser = this.authService.getCurrentUser();
+      if (currentUser) {
+        filtered = filtered.filter(doc => doc.owner_id === currentUser.id);
+      }
+    }
 
     // Apply search filter
     if (this.searchTerm.trim()) {

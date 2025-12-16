@@ -17,6 +17,13 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'my-documents',
+    loadComponent: () => import('./features/documents/document-list/document-list.component').then(m => m.DocumentListComponent),
+    canActivate: [authGuard],
+    data: { myDocuments: true },
+    title: 'My Documents'
+  },
+  {
     path: 'search',
     loadChildren: () => import('./features/search/search.module').then(m => m.SearchModule),
     canActivate: [authGuard]
