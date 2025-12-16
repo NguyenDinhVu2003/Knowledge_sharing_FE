@@ -1,0 +1,175 @@
+<app-header></app-header>
+
+<div class="profile-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="title-section">
+      <h1>
+        <mat-icon>person</mat-icon>
+        My Profile & Interests
+      </h1>
+      <p class="subtitle">
+        Select topics you're interested in to receive personalized notifications
+      </p>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <mat-spinner></mat-spinner>
+    <p>Loading your interests...</p>
+  </div>
+
+  <div *ngIf="!loading" class="profile-content">
+    <!-- Current Interests Section -->
+    <mat-card class="interests-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>favorite</mat-icon>
+          Your Current Interests ({{ selectedTagIds.length }})
+        </mat-card-title>
+        <mat-card-subtitle>
+          You'll receive notifications when new documents match these topics
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <!-- Selected Tags Display -->
+        <div class="selected-tags" *ngIf="selectedTagIds.length > 0">
+          <mat-chip-set>
+            <mat-chip *ngFor="let tagId of selectedTagIds" 
+                      highlighted
+                      color="primary"
+                      (removed)="removeInterest(tagId)">
+              {{ getTagById(tagId)?.name }}
+              <mat-icon matChipRemove>cancel</mat-icon>
+            </mat-chip>
+          </mat-chip-set>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="selectedTagIds.length === 0" class="empty-interests">
+          <mat-icon>info</mat-icon>
+          <p>You haven't selected any interests yet. Choose topics below to get started.</p>
+        </div>
+
+        <!-- Save/Reset Buttons -->
+        <div class="action-buttons" *ngIf="hasChanges">
+          <button mat-raised-button color="primary" 
+                  (click)="saveInterests()"
+                  [disabled]="saving || selectedTagIds.length === 0">
+            <mat-icon>save</mat-icon>
+            {{ saving ? 'Saving...' : 'Save Changes' }}
+          </button>
+          <button mat-stroked-button (click)="resetInterests()" [disabled]="saving">
+            <mat-icon>refresh</mat-icon>
+            Reset
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Popular Tags Section -->
+    <mat-card class="popular-tags-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>trending_up</mat-icon>
+          Popular Topics
+        </mat-card-title>
+        <mat-card-subtitle>
+          Most frequently used tags in documents
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="popular-tags-grid">
+          <mat-chip *ngFor="let tag of popularTags$ | async"
+                    [highlighted]="isSelected(tag.id)"
+                    [color]="isSelected(tag.id) ? 'primary' : ''"
+                    (click)="toggleTag(tag.id)"
+                    class="popular-tag-chip">
+            <mat-icon matChipAvatar>
+              {{ isSelected(tag.id) ? 'check_circle' : 'add_circle_outline' }}
+            </mat-icon>
+            {{ tag.name }}
+            <span class="document-count">({{ tag.documentCount }} docs)</span>
+          </mat-chip>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- All Tags Section -->
+    <mat-card class="all-tags-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>label</mat-icon>
+          All Available Tags
+        </mat-card-title>
+        <mat-card-subtitle>
+          Browse and select from all available topics
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <!-- Search Bar -->
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search tags</mat-label>
+          <input matInput [formControl]="searchControl" placeholder="e.g., Angular, Java">
+          <mat-icon matPrefix>search</mat-icon>
+          <button mat-icon-button matSuffix 
+                  *ngIf="searchControl.value"
+                  (click)="searchControl.setValue('')">
+            <mat-icon>clear</mat-icon>
+          </button>
+        </mat-form-field>
+
+        <!-- All Tags List -->
+        <div class="all-tags-list">
+          <mat-chip *ngFor="let tag of filteredTags$ | async"
+                    [highlighted]="isSelected(tag.id)"
+                    [color]="isSelected(tag.id) ? 'primary' : ''"
+                    (click)="toggleTag(tag.id)"
+                    class="tag-chip">
+            {{ tag.name }}
+            <span class="doc-count" *ngIf="tag.documentCount">
+              ({{ tag.documentCount }})
+            </span>
+            <mat-icon *ngIf="isSelected(tag.id)">check</mat-icon>
+          </mat-chip>
+        </div>
+
+        <!-- No Results -->
+        <div *ngIf="(filteredTags$ | async)?.length === 0" class="no-results">
+          <mat-icon>search_off</mat-icon>
+          <p>No tags found matching "{{ searchControl.value }}"</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Info Card -->
+    <mat-card class="info-card">
+      <mat-card-content>
+        <h3>
+          <mat-icon>info</mat-icon>
+          How it works
+        </h3>
+        <ul>
+          <li>
+            <strong>Select your interests:</strong> Choose tags that match topics you want to follow
+          </li>
+          <li>
+            <strong>Get notified:</strong> Receive notifications when new documents with your selected tags are uploaded
+          </li>
+          <li>
+            <strong>Stay updated:</strong> Get alerts when documents you've favorited are updated
+          </li>
+          <li>
+            <strong>Customize anytime:</strong> Update your interests whenever you want
+          </li>
+        </ul>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+
+<app-footer></app-footer>
