@@ -20,6 +20,7 @@
             <app-document-card 
               [document]="doc"
               [showActions]="true"
+              [currentUserId]="currentUser?.id ?? null"
               (cardClicked)="navigateToDocument(doc.id)"
               (actionClicked)="onActionClicked($event)">
             </app-document-card>
@@ -48,6 +49,7 @@
             <app-document-card 
               [document]="doc"
               [showActions]="true"
+              [currentUserId]="currentUser?.id ?? null"
               (cardClicked)="navigateToDocument(doc.id)"
               (actionClicked)="onActionClicked($event)">
             </app-document-card>
@@ -83,6 +85,7 @@
             <app-document-card 
               [document]="doc"
               [showActions]="true"
+              [currentUserId]="currentUser?.id ?? null"
               (cardClicked)="navigateToDocument(doc.id)"
               (actionClicked)="onActionClicked($event)">
             </app-document-card>

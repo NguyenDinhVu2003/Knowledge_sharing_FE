@@ -61,14 +61,16 @@
         <mat-icon>visibility</mat-icon>
         View
       </button>
-      <button mat-button type="button" color="accent" (click)="onActionClick('edit', $event)" aria-label="Edit document">
-        <mat-icon>edit</mat-icon>
-        Edit
-      </button>
-      <button mat-button type="button" color="warn" (click)="onActionClick('delete', $event)" aria-label="Delete document">
-        <mat-icon>delete</mat-icon>
-        Delete
-      </button>
+      @if (isOwner()) {
+        <button mat-button type="button" color="accent" (click)="onActionClick('edit', $event)" aria-label="Edit document">
+          <mat-icon>edit</mat-icon>
+          Edit
+        </button>
+        <button mat-button type="button" color="warn" (click)="onActionClick('delete', $event)" aria-label="Delete document">
+          <mat-icon>delete</mat-icon>
+          Delete
+        </button>
+      }
     </mat-card-actions>
   }
 </mat-card>

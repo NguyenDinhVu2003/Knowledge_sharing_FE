@@ -24,9 +24,17 @@ import { Document } from '../../../core/models';
 export class DocumentCardComponent {
   @Input({ required: true }) document!: Document;
   @Input() showActions: boolean = false;
+  @Input() currentUserId: number | null = null;
 
   @Output() cardClicked = new EventEmitter<number>();
   @Output() actionClicked = new EventEmitter<{ action: string; documentId: number }>();
+
+  /**
+   * Check if current user is the owner of the document
+   */
+  isOwner(): boolean {
+    return this.currentUserId !== null && this.document.owner_id === this.currentUserId;
+  }
 
   /**
    * Get truncated summary (max 150 characters)
