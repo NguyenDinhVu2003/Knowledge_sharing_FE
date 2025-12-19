@@ -1,7 +1,7 @@
 import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap, catchError, throwError, of, delay } from 'rxjs';
+import { Observable, BehaviorSubject, tap, catchError, throwError, of } from 'rxjs';
 import { Router } from '@angular/router';
 import { User, LoginRequest, LoginResponse } from '../models';
 import { environment } from '../../../environments/environment';
@@ -34,82 +34,117 @@ export class AuthService {
    * @returns Observable with login response containing token and user data
    */
   login(username: string, password: string): Observable<LoginResponse> {
-    // MOCK AUTHENTICATION FOR TESTING
-    // TODO: Replace with actual backend API call when ready
-    
-    // Check mock credentials
-    if (username === 'admin' && password === 'admin123') {
-      // Create mock response
-      const mockToken = this.generateMockToken('admin', 'ADMIN');
-      const mockUser: User = {
-        id: 1,
-        username: 'admin',
-        email: 'admin@knowledgesharing.com',
-        role: 'ADMIN'
-      };
-      
-      const mockResponse: LoginResponse = {
-        token: mockToken,
-        user: mockUser
-      };
-      
-      // Simulate network delay and return response
-      return of(mockResponse).pipe(
-        delay(800),
-        tap(response => {
-          // Store token and user info
-          this.setToken(response.token);
-          this.setUser(response.user);
-          this.currentUserSubject.next(response.user);
-        })
-      );
-    } else {
-      // Return error for invalid credentials
-      return throwError(() => ({ 
-        error: { 
-          message: 'Invalid username or password' 
-        } 
-      })).pipe(
-        delay(800)
-      ) as Observable<LoginResponse>;
-    }
-    
-    /* ORIGINAL API IMPLEMENTATION - Uncomment when backend is ready
     const loginRequest: LoginRequest = { username, password };
     
     return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, loginRequest).pipe(
       tap(response => {
-        // Store token and user info
+        // Validate token exists
+        if (!response.token) {
+          throw new Error('No token received from server');
+        }
+        
+        // Store token
         this.setToken(response.token);
-        this.setUser(response.user);
-        this.currentUserSubject.next(response.user);
+        
+        // Extract user info from response (backend returns user data at root level)
+        const user: User = {
+          id: response.id,
+          username: response.username,
+          email: response.email,
+          role: response.role
+        };
+        
+        // Store user info
+        this.setUser(user);
+        this.currentUserSubject.next(user);
       }),
       catchError(error => {
         console.error('Login error:', error);
         return throwError(() => error);
       })
     );
-    */
   }
 
   /**
    * Logs out the current user
    * Clears token and user info, then redirects to login
    */
-  logout(): void {
+  logout(): Observable<void> {
+    const token = this.getToken();
+    
+    // If no token, just clear local data
+    if (!token) {
+      this.clearAuthData();
+      this.router.navigate(['/auth/login']);
+      return of(void 0);
+    }
+
     // Call backend logout endpoint
-    this.http.post(`${this.apiUrl}/auth/logout`, {}).subscribe({
-      next: () => {
+    return this.http.post<void>(`${this.apiUrl}/auth/logout`, {}).pipe(
+      tap(() => {
         this.clearAuthData();
         this.router.navigate(['/auth/login']);
-      },
-      error: (error) => {
+      }),
+      catchError(error => {
         console.error('Logout error:', error);
         // Clear local data even if backend call fails
         this.clearAuthData();
         this.router.navigate(['/auth/login']);
-      }
-    });
+        return of(void 0);
+      })
+    );
+  }
+
+  /**
+   * Registers a new user
+   * @param username - Desired username
+   * @param email - User's email address
+   * @param password - Desired password
+   * @returns Observable with registration response containing token and user data
+   */
+  register(username: string, email: string, password: string): Observable<LoginResponse> {
+    const registerRequest = { username, email, password };
+    
+    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/register`, registerRequest).pipe(
+      tap(response => {
+        // Store token
+        this.setToken(response.token);
+        
+        // Extract user info from response
+        const user: User = {
+          id: response.id,
+          username: response.username,
+          email: response.email,
+          role: response.role
+        };
+        
+        // Store user info after successful registration
+        this.setUser(user);
+        this.currentUserSubject.next(user);
+      }),
+      catchError(error => {
+        console.error('Registration error:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Gets current user information from backend
+   * @returns Observable with current user data
+   */
+  getCurrentUserFromAPI(): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/auth/me`).pipe(
+      tap(user => {
+        // Update local user data
+        this.setUser(user);
+        this.currentUserSubject.next(user);
+      }),
+      catchError(error => {
+        console.error('Get current user error:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
@@ -117,13 +152,27 @@ export class AuthService {
    * @returns true if token exists and is valid, false otherwise
    */
   isAuthenticated(): boolean {
+    if (!this.isBrowser) {
+      return false;
+    }
+    
     const token = this.getToken();
+    
     if (!token) {
       return false;
     }
     
     // Check if token is expired
-    return !this.isTokenExpired(token);
+    const isExpired = this.isTokenExpired(token);
+    
+    if (isExpired) {
+      // Token is expired, clear auth data
+      this.clearAuthData();
+      return false;
+    }
+    
+    // Token is valid
+    return true;
   }
 
   /**
@@ -171,8 +220,8 @@ export class AuthService {
     }
   }
 
-  private setUser(user: User): void {
-    if (this.isBrowser) {
+  private setUser(user: User | null): void {
+    if (this.isBrowser && user) {
       localStorage.setItem(this.USER_KEY, JSON.stringify(user));
     }
   }
@@ -182,12 +231,17 @@ export class AuthService {
       return null;
     }
     const userJson = localStorage.getItem(this.USER_KEY);
-    if (userJson) {
+    if (userJson && userJson !== 'undefined' && userJson !== 'null') {
       try {
-        return JSON.parse(userJson) as User;
+        const parsed = JSON.parse(userJson);
+        // Validate that parsed object has required properties
+        if (parsed && typeof parsed === 'object' && parsed.id !== undefined) {
+          return parsed as User;
+        }
       } catch (error) {
         console.error('Error parsing user data:', error);
-        return null;
+        // Clear invalid data
+        localStorage.removeItem(this.USER_KEY);
       }
     }
     return null;
@@ -203,51 +257,29 @@ export class AuthService {
 
   private isTokenExpired(token: string): boolean {
     try {
+      // Validate token format
+      if (!token || token.split('.').length !== 3) {
+        return true;
+      }
+      
       // Decode JWT token (payload is the second part)
       const payload = JSON.parse(atob(token.split('.')[1]));
       
       // Check if token has expiration time
       if (!payload.exp) {
+        // Token has no expiration, treat as valid
         return false;
       }
       
       // Check if token is expired (exp is in seconds, Date.now() is in milliseconds)
       const expirationDate = new Date(payload.exp * 1000);
-      return expirationDate < new Date();
+      const now = new Date();
+      const isExpired = expirationDate <= now;
+      
+      return isExpired;
     } catch (error) {
       console.error('Error checking token expiration:', error);
       return true; // Consider invalid tokens as expired
     }
-  }
-
-  /**
-   * Generates a mock JWT token for testing
-   * @param username - Username to encode
-   * @param role - User role to encode
-   * @returns Mock JWT token string
-   */
-  private generateMockToken(username: string, role: string): string {
-    // Create mock JWT header
-    const header = {
-      alg: 'HS256',
-      typ: 'JWT'
-    };
-    
-    // Create mock JWT payload with 24 hour expiration
-    const payload = {
-      sub: username,
-      role: role,
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
-    };
-    
-    // Base64 encode header and payload
-    const encodedHeader = btoa(JSON.stringify(header));
-    const encodedPayload = btoa(JSON.stringify(payload));
-    
-    // Mock signature (not cryptographically secure, only for testing)
-    const signature = btoa('mock-signature');
-    
-    return `${encodedHeader}.${encodedPayload}.${signature}`;
   }
 }

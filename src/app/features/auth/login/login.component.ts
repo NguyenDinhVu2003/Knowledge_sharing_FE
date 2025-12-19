@@ -1,6 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -18,6 +18,7 @@ import { AuthService } from '../../../core/services/auth.service';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    RouterModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
@@ -35,15 +36,19 @@ export class LoginComponent implements OnInit {
   loading = signal(false);
   errorMessage = signal<string | null>(null);
   hidePassword = signal(true);
+  private returnUrl: string = '/home';
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
+    // Get return URL from route parameters or default to '/home'
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/home';
     this.initializeForm();
   }
 
@@ -136,17 +141,7 @@ export class LoginComponent implements OnInit {
     this.authService.login(username, password).subscribe({
       next: (response) => {
         this.loading.set(false);
-        
-        // Show success message
-        this.snackBar.open('Login successful! Welcome back.', 'Close', {
-          duration: 3000,
-          horizontalPosition: 'end',
-          verticalPosition: 'top',
-          panelClass: ['success-snackbar']
-        });
-
-        // Redirect to home page
-        this.router.navigate(['/home']);
+        this.showSuccessAndNavigate();
       },
       error: (error) => {
         this.loading.set(false);
@@ -171,5 +166,21 @@ export class LoginComponent implements OnInit {
         });
       }
     });
+  }
+
+  /**
+   * Show success message and navigate to home
+   */
+  private showSuccessAndNavigate(): void {
+    // Show success message
+    this.snackBar.open('Login successful! Welcome back.', 'Close', {
+      duration: 3000,
+      horizontalPosition: 'end',
+      verticalPosition: 'top',
+      panelClass: ['success-snackbar']
+    });
+
+    // Redirect to return URL or home page
+    this.router.navigate([this.returnUrl]);
   }
 }

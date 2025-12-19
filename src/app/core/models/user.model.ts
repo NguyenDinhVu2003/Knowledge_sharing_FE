@@ -3,6 +3,7 @@ export interface User {
   username: string;
   email: string;
   role: string;
+  createdAt?: string;
 }
 
 export interface LoginRequest {
@@ -12,5 +13,15 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string;
-  user: User;
+  type?: string;
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+}
+
+export interface RegisterRequest {
+  username: string;
+  email: string;
+  password: string;
 }

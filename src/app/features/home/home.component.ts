@@ -136,6 +136,6 @@ export class HomeComponent implements OnInit {
    * Handle logout action from header
    */
   onLogout(): void {
-    this.authService.logout();
+    this.authService.logout().subscribe();
   }
 }

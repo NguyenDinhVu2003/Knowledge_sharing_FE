@@ -17,6 +17,7 @@ import { AuthRoutingModule } from './auth-routing.module';
 
 // Components (imported as standalone)
 import { LoginComponent } from './login/login.component';
+import { RegisterComponent } from './register/register.component';
 
 @NgModule({
   imports: [
@@ -35,7 +36,8 @@ import { LoginComponent } from './login/login.component';
     MatSnackBarModule,
     
     // Standalone Components
-    LoginComponent
+    LoginComponent,
+    RegisterComponent
   ]
 })
 export class AuthModule { }

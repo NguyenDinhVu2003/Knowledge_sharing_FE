@@ -181,6 +181,6 @@ export class DocumentListComponent implements OnInit {
   }
 
   onLogout(): void {
-    this.authService.logout();
+    this.authService.logout().subscribe();
   }
 }
