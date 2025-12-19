@@ -4,7 +4,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import type { Document } from '../models';
 import { DocumentVersion, Group, PagedResponse } from '../models';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../environments/environment.development';
 
 export interface DocumentQueryParams {
   page?: number;
@@ -19,7 +19,7 @@ export interface DocumentQueryParams {
 })
 export class DocumentService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = `/documents`;
+  private readonly apiUrl = `${environment.apiUrl}/documents`;
 
   getDocuments(params?: DocumentQueryParams): Observable<PagedResponse<Document>> {
     let httpParams = new HttpParams();
@@ -79,6 +79,7 @@ export class DocumentService {
   }
 
   getRecentDocuments(limit: number = 10): Observable<Document[]> {
+    console.log('api called', this.apiUrl)
     const params = new HttpParams()
       .set('sort', 'recent')
       .set('limit', limit.toString());
