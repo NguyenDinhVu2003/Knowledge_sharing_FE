@@ -39,9 +39,9 @@ export class DocumentService {
   }
 
   getDocumentById(id: number): Observable<Document> {
-    return this.http.get<Document>(`/`).pipe(
+    return this.http.get<Document>(`${this.apiUrl}/${id}`).pipe(
       catchError(error => {
-        console.error(`Error fetching document :`, error);
+        console.error(`Error fetching document ${id}:`, error);
         return throwError(() => error);
       })
     );
