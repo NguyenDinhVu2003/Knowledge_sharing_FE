@@ -236,24 +236,19 @@ export class DocumentUploadComponent implements OnInit {
 
     this.uploading = true;
     
-    // Create FormData
-    const formData = new FormData();
-    formData.append('file', this.selectedFile);
-    formData.append('title', this.uploadForm.get('title')?.value);
-    formData.append('summary', this.uploadForm.get('summary')?.value);
-    formData.append('sharing_level', this.uploadForm.get('sharingLevel')?.value);
-    formData.append('tags', JSON.stringify(this.tags));
+    // Create FormData according to backend API contract
+    // Part 1: data (application/json)
+    const documentData = {
+      title: this.uploadForm.get('title')?.value,
+      summary: this.uploadForm.get('summary')?.value,
+      sharingLevel: this.uploadForm.get('sharingLevel')?.value,
+      tags: this.tags
+    };
     
-    const groupIds = this.uploadForm.get('groupIds')?.value;
-    if (groupIds && groupIds.length > 0) {
-      formData.append('group_ids', JSON.stringify(groupIds));
-    }
-
-    // Get current user
-    const currentUser = this.authService.getCurrentUser();
-    if (currentUser) {
-      formData.append('owner_id', currentUser.id.toString());
-    }
+    const formData = new FormData();
+    formData.append('data', new Blob([JSON.stringify(documentData)], { type: 'application/json' }));
+    // Part 2: file (multipart file)
+    formData.append('file', this.selectedFile);
 
     this.documentService.uploadDocument(formData).subscribe({
       next: (document) => {
