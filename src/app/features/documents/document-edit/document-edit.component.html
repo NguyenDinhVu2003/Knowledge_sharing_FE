@@ -28,21 +28,21 @@
                 <mat-icon>insert_drive_file</mat-icon>
                 <div>
                   <strong>{{ document.title }}</strong>
-                  <p>Version {{ document.version_number }}</p>
+                  <p>Version {{ document.versionNumber }}</p>
                 </div>
               </div>
               <div class="info-item">
                 <mat-icon>storage</mat-icon>
                 <div>
                   <strong>File Size</strong>
-                  <p>{{ formatFileSize(document.file_size) }}</p>
+                  <p>{{ formatFileSize(document.fileSize) }}</p>
                 </div>
               </div>
               <div class="info-item">
                 <mat-icon>calendar_today</mat-icon>
                 <div>
                   <strong>Last Updated</strong>
-                  <p>{{ document.updated_at | date: 'medium' }}</p>
+                  <p>{{ document.updatedAt | date: 'medium' }}</p>
                 </div>
               </div>
             </mat-card-content>

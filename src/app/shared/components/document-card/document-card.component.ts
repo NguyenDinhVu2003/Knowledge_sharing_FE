@@ -33,7 +33,7 @@ export class DocumentCardComponent {
    * Check if current user is the owner of the document
    */
   isOwner(): boolean {
-    return this.currentUserId !== null && this.document.owner_id === this.currentUserId;
+    return this.currentUserId !== null && this.document.ownerId === this.currentUserId;
   }
 
   /**
@@ -53,7 +53,8 @@ export class DocumentCardComponent {
    * Get sharing level icon and label
    */
   getSharingLevelInfo(): { icon: string; label: string; color: string } {
-    switch (this.document.sharing_level.toLowerCase()) {
+    const level = this.document.sharingLevel?.toLowerCase() || 'public';
+    switch (level) {
       case 'private':
         return { icon: '🔒', label: 'Private', color: '#f44336' };
       case 'group':
@@ -68,8 +69,9 @@ export class DocumentCardComponent {
   /**
    * Format date to readable string
    */
-  formatDate(date: Date | string): string {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
+  formatDate(date: string | undefined): string {
+    if (!date) return 'N/A';
+    const dateObj = new Date(date);
     return dateObj.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -104,11 +106,9 @@ export class DocumentCardComponent {
 
   /**
    * Check if star should be filled (for rating display)
-   * This is a placeholder - you can add actual rating to Document model later
    */
   isStarFilled(index: number): boolean {
-    // Placeholder: Return random rating for demo
-    const rating = 4; // You can add this to Document model
-    return index < rating;
+    const rating = this.document.averageRating || 0;
+    return index < Math.round(rating);
   }
 }

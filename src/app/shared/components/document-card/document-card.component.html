@@ -1,4 +1,4 @@
-<mat-card class="document-card" (click)="onCardClick()" [class.archived]="document.is_archived">
+<mat-card class="document-card" (click)="onCardClick()" [class.archived]="document.isArchived">
   <mat-card-header>
     <div class="card-header-content">
       <mat-card-title class="document-title" [matTooltip]="document.title">
@@ -17,36 +17,52 @@
     <div class="document-meta">
       <div class="meta-item">
         <mat-icon class="meta-icon">description</mat-icon>
-        <span class="meta-text">{{ document.file_type.toUpperCase() }}</span>
+        <span class="meta-text">{{ document.fileType.toUpperCase() }}</span>
       </div>
       
       <div class="meta-item">
         <mat-icon class="meta-icon">person</mat-icon>
-        <span class="meta-text">Owner ID: {{ document.owner_id }}</span>
+        <span class="meta-text">{{ document.ownerUsername }}</span>
       </div>
 
       <div class="meta-item">
         <mat-icon class="meta-icon">calendar_today</mat-icon>
-        <span class="meta-text">{{ formatDate(document.created_at) }}</span>
+        <span class="meta-text">{{ formatDate(document.createdAt) }}</span>
       </div>
 
-      <div class="meta-item">
-        <mat-icon class="meta-icon">update</mat-icon>
-        <span class="meta-text">v{{ document.version_number }}</span>
-      </div>
-    </div>
-
-    <!-- Star Rating Display (Read-only) -->
-    <div class="rating-container">
-      @for (star of getStarArray(); track $index) {
-        <mat-icon class="star-icon" [class.filled]="isStarFilled($index)">
-          {{ isStarFilled($index) ? 'star' : 'star_border' }}
-        </mat-icon>
+      @if (document.versionNumber) {
+        <div class="meta-item">
+          <mat-icon class="meta-icon">update</mat-icon>
+          <span class="meta-text">v{{ document.versionNumber }}</span>
+        </div>
       }
     </div>
 
+    <!-- Tags Display -->
+    @if (document.tags && document.tags.length > 0) {
+      <div class="tags-container">
+        @for (tag of document.tags.slice(0, 3); track tag) {
+          <mat-chip class="tag-chip">{{ tag }}</mat-chip>
+        }
+        @if (document.tags.length > 3) {
+          <span class="more-tags">+{{ document.tags.length - 3 }} more</span>
+        }
+      </div>
+    }
+
+    <!-- Star Rating Display (Read-only) -->
+    @if (document.averageRating !== undefined) {
+      <div class="rating-container">
+        @for (star of getStarArray(); track $index) {
+          <mat-icon class="star-icon" [class.filled]="isStarFilled($index)">
+            {{ isStarFilled($index) ? 'star' : 'star_border' }}
+          </mat-icon>
+        }
+      </div>
+    }
+
     <!-- Archived Badge -->
-    @if (document.is_archived) {
+    @if (document.isArchived) {
       <div class="archived-badge">
         <mat-icon>archive</mat-icon>
         <span>Archived</span>

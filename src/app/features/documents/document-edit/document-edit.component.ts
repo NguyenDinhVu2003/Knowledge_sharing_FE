@@ -132,7 +132,7 @@ export class DocumentEditComponent implements OnInit {
         
         // Check if current user is owner
         const currentUser = this.authService.getCurrentUser();
-        if (currentUser?.id !== doc.owner_id) {
+        if (currentUser?.id !== doc.ownerId) {
           this.snackBar.open('You do not have permission to edit this document', 'Close', { duration: 3000 });
           this.router.navigate(['/documents', id]);
           return;
@@ -142,8 +142,8 @@ export class DocumentEditComponent implements OnInit {
         this.editForm.patchValue({
           title: doc.title,
           summary: doc.summary,
-          sharingLevel: doc.sharing_level,
-          groupIds: doc.group_ids || []
+          sharingLevel: doc.sharingLevel,
+          groupIds: doc.groupIds || []
         });
 
         // Set tags

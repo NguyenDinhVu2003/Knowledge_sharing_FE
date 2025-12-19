@@ -113,7 +113,7 @@ export class DocumentListComponent implements OnInit {
     if (this.showOnlyMyDocuments) {
       const currentUser = this.authService.getCurrentUser();
       if (currentUser) {
-        filtered = filtered.filter(doc => doc.owner_id === currentUser.id);
+        filtered = filtered.filter(doc => doc.ownerId === currentUser.id);
       }
     }
 
@@ -129,7 +129,7 @@ export class DocumentListComponent implements OnInit {
     // Apply sharing level filter
     if (this.filterLevel !== 'ALL') {
       filtered = filtered.filter(doc => 
-        doc.sharing_level.toUpperCase() === this.filterLevel
+        doc.sharingLevel.toUpperCase() === this.filterLevel
       );
     }
 
@@ -143,17 +143,17 @@ export class DocumentListComponent implements OnInit {
     switch (this.sortBy) {
       case 'recent':
         this.filteredDocuments.sort((a, b) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         break;
       case 'oldest':
         this.filteredDocuments.sort((a, b) => 
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
         break;
       case 'popular':
         this.filteredDocuments.sort((a, b) => 
-          (b.average_rating || 0) - (a.average_rating || 0)
+          (b.averageRating || 0) - (a.averageRating || 0)
         );
         break;
       case 'title':

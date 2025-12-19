@@ -61,10 +61,15 @@ export class HomeComponent implements OnInit {
       return;
     }
 
-    // Load documents
-    this.recentDocuments$ = this.documentService.getRecentDocuments(5);
-    this.popularDocuments$ = this.documentService.getPopularDocuments(5);
-    this.userDocuments$ = this.documentService.getUserDocuments(5);
+    // Load documents from backend API
+    // GET /api/documents?sort=recent&limit=10
+    this.recentDocuments$ = this.documentService.getRecentDocuments(10);
+    
+    // GET /api/documents?sort=popular&limit=10
+    this.popularDocuments$ = this.documentService.getPopularDocuments(10);
+    
+    // GET /api/documents?owner=me
+    this.userDocuments$ = this.documentService.getUserDocuments();
   }
 
   /**

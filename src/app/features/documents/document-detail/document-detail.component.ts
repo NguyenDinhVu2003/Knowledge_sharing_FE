@@ -89,15 +89,15 @@ export class DocumentDetailComponent implements OnInit {
         
         // Check if current user is owner
         const currentUser = this.authService.getCurrentUser();
-        this.isOwner = currentUser?.id === doc.owner_id;
+        this.isOwner = currentUser?.id === doc.ownerId;
         
         // Load related data
         this.loadVersions(id);
         this.loadRelatedDocuments(id);
         
         // Create safe URL for preview
-        if (doc.file_path) {
-          this.createSafeUrl(doc.file_path);
+        if (doc.filePath) {
+          this.createSafeUrl(doc.filePath);
         }
         
         // Check if favorited (mock - would check against user's favorites)
@@ -166,7 +166,7 @@ export class DocumentDetailComponent implements OnInit {
     this.documentService.rateDocument(this.document.id, rating).subscribe({
       next: () => {
         if (this.document) {
-          this.document.average_rating = rating;
+          this.document.averageRating = rating;
         }
         this.snackBar.open(`Rated ${rating} stars`, 'Close', { duration: 2000 });
       },
@@ -271,20 +271,20 @@ export class DocumentDetailComponent implements OnInit {
   }
 
   canPreview(): boolean {
-    if (!this.document) return false;
-    const ext = this.document.file_path.split('.').pop()?.toLowerCase();
+    if (!this.document || !this.document.filePath) return false;
+    const ext = this.document.filePath.split('.').pop()?.toLowerCase();
     return ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'svg'].includes(ext || '');
   }
 
   isImage(): boolean {
-    if (!this.document) return false;
-    const ext = this.document.file_path.split('.').pop()?.toLowerCase();
+    if (!this.document || !this.document.filePath) return false;
+    const ext = this.document.filePath.split('.').pop()?.toLowerCase();
     return ['png', 'jpg', 'jpeg', 'gif', 'svg'].includes(ext || '');
   }
 
   isPdf(): boolean {
-    if (!this.document) return false;
-    const ext = this.document.file_path.split('.').pop()?.toLowerCase();
+    if (!this.document || !this.document.filePath) return false;
+    const ext = this.document.filePath.split('.').pop()?.toLowerCase();
     return ext === 'pdf';
   }
 

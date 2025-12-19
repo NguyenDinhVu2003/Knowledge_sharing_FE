@@ -105,6 +105,28 @@ mat-card-content {
   font-size: 0.75rem;
 }
 
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.tag-chip {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  height: auto;
+  min-height: 22px;
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.more-tags {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.6);
+  font-style: italic;
+}
+
 .rating-container {
   display: flex;
   align-items: center;

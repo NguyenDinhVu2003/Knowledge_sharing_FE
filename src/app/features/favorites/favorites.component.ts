@@ -155,7 +155,7 @@ export class FavoritesComponent implements OnInit {
             break;
           case 'rating':
             sorted.sort((a, b) => 
-              (b.document!.average_rating || 0) - (a.document!.average_rating || 0)
+              (b.document!.averageRating || 0) - (a.document!.averageRating || 0)
             );
             break;
         }

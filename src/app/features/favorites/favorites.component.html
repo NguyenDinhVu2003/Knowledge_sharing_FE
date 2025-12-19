@@ -100,8 +100,8 @@
                        (click)="navigateToDocument(favorite.documentId)">
           
           <!-- File Type Icon -->
-          <mat-icon matListItemIcon [class]="getFileTypeClass(favorite.document!.file_type)">
-            {{ getFileTypeIcon(favorite.document!.file_type) }}
+          <mat-icon matListItemIcon [class]="getFileTypeClass(favorite.document!.fileType)">
+            {{ getFileTypeIcon(favorite.document!.fileType) }}
           </mat-icon>
 
           <!-- Document Title + Tags -->
@@ -118,11 +118,11 @@
           <div matListItemLine class="list-meta">
             <span class="owner">
               <mat-icon inline>person</mat-icon>
-              {{ favorite.document!.owner_name }}
+              {{ favorite.document!.ownerUsername }}
             </span>
             <span class="rating">
               <mat-icon inline>star</mat-icon>
-              {{ favorite.document!.average_rating || 'N/A' }}
+              {{ favorite.document!.averageRating || 'N/A' }}
             </span>
             <span class="date">
               <mat-icon inline>access_time</mat-icon>

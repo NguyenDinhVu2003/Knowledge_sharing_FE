@@ -20,23 +20,19 @@
           <mat-chip-listbox>
             <mat-chip>
               <mat-icon>person</mat-icon>
-              {{ document.owner_name }}
+              {{ document.ownerUsername }}
             </mat-chip>
             <mat-chip>
               <mat-icon>calendar_today</mat-icon>
-              {{ formatDate(document.created_at) }}
+              {{ formatDate(document.createdAt) }}
             </mat-chip>
             <mat-chip>
               <mat-icon>folder</mat-icon>
-              {{ document.sharing_level }}
+              {{ document.sharingLevel }}
             </mat-chip>
             <mat-chip>
               <mat-icon>insert_drive_file</mat-icon>
-              {{ formatFileSize(document.file_size) }}
-            </mat-chip>
-            <mat-chip>
-              <mat-icon>visibility</mat-icon>
-              {{ document.views }} views
+              {{ document.fileType }}
             </mat-chip>
           </mat-chip-listbox>
         </div>
@@ -79,7 +75,7 @@
             </mat-card-header>
             <mat-card-content>
               @if (isImage()) {
-                <img [src]="document.file_path" [alt]="document.title" class="preview-image">
+                <img [src]="document.filePath" [alt]="document.title" class="preview-image">
               } @else if (isPdf()) {
                 <iframe [src]="safeFileUrl" class="preview-iframe"></iframe>
               }
@@ -133,13 +129,13 @@
             <mat-card-title>Rating</mat-card-title>
           </mat-card-header>
           <mat-card-content>
-            @if (document.average_rating) {
+            @if (document.averageRating) {
               <div class="average-rating">
-                <span class="rating-number">{{ document.average_rating.toFixed(1) }}</span>
+                <span class="rating-number">{{ document.averageRating.toFixed(1) }}</span>
                 <div class="stars">
                   @for (star of ratingStars; track star) {
-                    <mat-icon [class.filled]="star <= (document.average_rating || 0)">
-                      {{ star <= (document.average_rating || 0) ? 'star' : 'star_border' }}
+                    <mat-icon [class.filled]="star <= (document.averageRating || 0)">
+                      {{ star <= (document.averageRating || 0) ? 'star' : 'star_border' }}
                     </mat-icon>
                   }
                 </div>
@@ -179,10 +175,10 @@
                   <mat-expansion-panel>
                     <mat-expansion-panel-header>
                       <mat-panel-title>
-                        Version {{ version.version_number }}
+                        Version {{ version.versionNumber }}
                       </mat-panel-title>
                       <mat-panel-description>
-                        {{ formatDate(version.updated_at) }}
+                        {{ formatDate(version.updatedAt) }}
                       </mat-panel-description>
                     </mat-expansion-panel-header>
                     
@@ -190,13 +186,13 @@
                       <mat-list-item>
                         <mat-icon matListItemIcon>person</mat-icon>
                         <span matListItemTitle>Updated by</span>
-                        <span matListItemLine>{{ version.updated_by }}</span>
+                        <span matListItemLine>{{ version.updatedBy }}</span>
                       </mat-list-item>
-                      @if (version.change_notes) {
+                      @if (version.changeNotes) {
                         <mat-list-item>
                           <mat-icon matListItemIcon>notes</mat-icon>
                           <span matListItemTitle>Changes</span>
-                          <span matListItemLine>{{ version.change_notes }}</span>
+                          <span matListItemLine>{{ version.changeNotes }}</span>
                         </mat-list-item>
                       }
                     </mat-list>
