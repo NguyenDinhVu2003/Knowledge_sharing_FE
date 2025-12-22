@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,7 +19,8 @@ import { Document } from '../../../core/models';
     MatTooltipModule
   ],
   templateUrl: './document-card.component.html',
-  styleUrl: './document-card.component.scss'
+  styleUrl: './document-card.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocumentCardComponent {
   @Input({ required: true }) document!: Document;

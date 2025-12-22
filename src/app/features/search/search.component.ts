@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -48,12 +48,14 @@ import { DocumentCardComponent } from '../../shared/components/document-card/doc
     DocumentCardComponent
   ],
   templateUrl: './search.component.html',
-  styleUrls: ['./search.component.scss']
+  styleUrls: ['./search.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SearchComponent implements OnInit {
   private fb = inject(FormBuilder);
   private searchService = inject(SearchService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   searchForm!: FormGroup;
   searchResults: SearchResponse = {
@@ -115,16 +117,27 @@ export class SearchComponent implements OnInit {
   }
 
   loadFilterOptions() {
+    console.log('⏰ Loading filter options...');
+    const startTime = performance.now();
+    
     // Load available tags
     this.searchService.getAllTags().subscribe({
-      next: (tags) => this.availableTags = tags,
-      error: (err) => console.error('Failed to load tags', err)
+      next: (tags) => {
+        this.availableTags = tags;
+        console.log(`✅ Tags loaded in ${(performance.now() - startTime).toFixed(2)}ms:`, tags.length, 'tags');
+        this.cdr.markForCheck();
+      },
+      error: (err) => console.error('❌ Failed to load tags', err)
     });
 
     // Load available groups
     this.searchService.getAllGroups().subscribe({
-      next: (groups) => this.availableGroups = groups,
-      error: (err) => console.error('Failed to load groups', err)
+      next: (groups) => {
+        this.availableGroups = groups;
+        console.log(`✅ Groups loaded in ${(performance.now() - startTime).toFixed(2)}ms:`, groups.length, 'groups');
+        this.cdr.markForCheck();
+      },
+      error: (err) => console.error('❌ Failed to load groups', err)
     });
   }
 
@@ -146,6 +159,9 @@ export class SearchComponent implements OnInit {
   performSearch() {
     const query = this.searchForm.get('query')?.value?.trim();
 
+    console.log('🔍 performSearch called, query:', query);
+    console.log('📋 Form values:', this.searchForm.value);
+
     // Allow search with filters even without query
     // if (!query || query.length < 2) {
     //   return;
@@ -155,15 +171,14 @@ export class SearchComponent implements OnInit {
     this.lastSearchQuery = query || '';
     this.searchPerformed = true;
 
-    // Perform keyword search with filters
+    // Perform unified search with all filters
     const searchRequest: SearchRequest = {
       filters: {
-        query: query || undefined,
+        q: query || undefined,
         tags: this.searchForm.get('tags')?.value,
-        dateFrom: this.searchForm.get('dateFrom')?.value,
-        dateTo: this.searchForm.get('dateTo')?.value,
+        fromDate: this.searchForm.get('dateFrom')?.value,
+        toDate: this.searchForm.get('dateTo')?.value,
         sharingLevel: this.searchForm.get('sharingLevel')?.value || undefined,
-        groupId: this.searchForm.get('groupId')?.value || undefined,
         sortBy: this.searchForm.get('sortBy')?.value
       },
       searchType: 'KEYWORD',
@@ -171,14 +186,20 @@ export class SearchComponent implements OnInit {
       pageSize: this.pageSize
     };
 
+    console.log('📤 Search request:', searchRequest);
+
     this.searchService.searchDocuments(searchRequest).subscribe({
       next: (response) => {
+        console.log('✅ Search response received:', response);
         this.searchResults = response;
         this.searching = false;
+        console.log('✅ UI updated, searching:', this.searching);
+        this.cdr.markForCheck();
       },
       error: (err) => {
-        console.error('Search failed', err);
+        console.error('❌ Search failed:', err);
         this.searching = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -189,12 +210,11 @@ export class SearchComponent implements OnInit {
 
     const searchRequest: SearchRequest = {
       filters: {
-        query: query,
+        q: query,
         tags: this.searchForm.get('tags')?.value,
-        dateFrom: this.searchForm.get('dateFrom')?.value,
-        dateTo: this.searchForm.get('dateTo')?.value,
+        fromDate: this.searchForm.get('dateFrom')?.value,
+        toDate: this.searchForm.get('dateTo')?.value,
         sharingLevel: this.searchForm.get('sharingLevel')?.value || undefined,
-        groupId: this.searchForm.get('groupId')?.value || undefined,
         sortBy: this.searchForm.get('sortBy')?.value
       },
       searchType: 'KEYWORD',
@@ -203,10 +223,14 @@ export class SearchComponent implements OnInit {
     };
 
     this.searchService.searchDocuments(searchRequest).subscribe({
-      next: (response) => this.searchResults = response,
+      next: (response) => {
+        this.searchResults = response;
+        this.cdr.markForCheck();
+      },
       error: (err) => {
         console.error('Pagination search failed', err);
         this.searching = false;
+        this.cdr.markForCheck();
       }
     });
   }
