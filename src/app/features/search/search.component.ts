@@ -17,7 +17,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatListModule } from '@angular/material/list';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { SearchService, SearchRequest, SearchResponse } from '../../core/services/search.service';
+import { SearchService, SearchRequest, SearchResponse, Tag, Group } from '../../core/services/search.service';
 import { Document } from '../../core/models/document.model';
 import { HeaderComponent } from '../../shared/components/header/header.component';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
@@ -58,13 +58,20 @@ export class SearchComponent implements OnInit {
   searchForm!: FormGroup;
   searchResults: SearchResponse = {
     documents: [],
-    totalCount: 0,
-    page: 0,
-    totalPages: 0
+    currentPage: 0,
+    totalPages: 0,
+    totalElements: 0,
+    pageSize: 10,
+    tagFacets: null,
+    fileTypeFacets: null,
+    sharingLevelFacets: null,
+    ownerFacets: null,
+    query: null,
+    searchTimeMs: 0
   };
 
-  availableTags: string[] = [];
-  availableGroups: any[] = [];
+  availableTags: Tag[] = [];
+  availableGroups: Group[] = [];
 
   searching: boolean = false;
   searchPerformed: boolean = false;
@@ -139,84 +146,69 @@ export class SearchComponent implements OnInit {
   performSearch() {
     const query = this.searchForm.get('query')?.value?.trim();
 
-    if (!query || query.length < 2) {
-      return; // Require at least 2 characters
-    }
+    // Allow search with filters even without query
+    // if (!query || query.length < 2) {
+    //   return;
+    // }
 
     this.searching = true;
-    this.lastSearchQuery = query;
+    this.lastSearchQuery = query || '';
     this.searchPerformed = true;
 
-    if (this.isSemanticSearch) {
-      // Perform semantic search
-      this.searchService.semanticSearch(query, 0, this.pageSize).subscribe({
-        next: (response) => {
-          this.searchResults = response;
-          this.searching = false;
-        },
-        error: (err) => {
-          console.error('Semantic search failed', err);
-          this.searching = false;
-        }
-      });
-    } else {
-      // Perform keyword search with filters
-      const searchRequest: SearchRequest = {
-        filters: {
-          query: query,
-          tags: this.searchForm.get('tags')?.value,
-          dateFrom: this.searchForm.get('dateFrom')?.value,
-          dateTo: this.searchForm.get('dateTo')?.value,
-          sharingLevel: this.searchForm.get('sharingLevel')?.value || undefined,
-          groupId: this.searchForm.get('groupId')?.value || undefined,
-          sortBy: this.searchForm.get('sortBy')?.value
-        },
-        searchType: 'KEYWORD',
-        page: 0,
-        pageSize: this.pageSize
-      };
+    // Perform keyword search with filters
+    const searchRequest: SearchRequest = {
+      filters: {
+        query: query || undefined,
+        tags: this.searchForm.get('tags')?.value,
+        dateFrom: this.searchForm.get('dateFrom')?.value,
+        dateTo: this.searchForm.get('dateTo')?.value,
+        sharingLevel: this.searchForm.get('sharingLevel')?.value || undefined,
+        groupId: this.searchForm.get('groupId')?.value || undefined,
+        sortBy: this.searchForm.get('sortBy')?.value
+      },
+      searchType: 'KEYWORD',
+      page: 0,
+      pageSize: this.pageSize
+    };
 
-      this.searchService.searchDocuments(searchRequest).subscribe({
-        next: (response) => {
-          this.searchResults = response;
-          this.searching = false;
-        },
-        error: (err) => {
-          console.error('Search failed', err);
-          this.searching = false;
-        }
-      });
-    }
+    this.searchService.searchDocuments(searchRequest).subscribe({
+      next: (response) => {
+        this.searchResults = response;
+        this.searching = false;
+      },
+      error: (err) => {
+        console.error('Search failed', err);
+        this.searching = false;
+      }
+    });
   }
 
   onPageChange(event: PageEvent) {
     const query = this.searchForm.get('query')?.value;
     this.pageSize = event.pageSize;
 
-    if (this.isSemanticSearch) {
-      this.searchService.semanticSearch(query, event.pageIndex, event.pageSize).subscribe({
-        next: (response) => this.searchResults = response
-      });
-    } else {
-      const searchRequest: SearchRequest = {
-        filters: {
-          query: query,
-          tags: this.searchForm.get('tags')?.value,
-          dateFrom: this.searchForm.get('dateFrom')?.value,
-          dateTo: this.searchForm.get('dateTo')?.value,
-          sharingLevel: this.searchForm.get('sharingLevel')?.value || undefined,
-          groupId: this.searchForm.get('groupId')?.value || undefined,
-          sortBy: this.searchForm.get('sortBy')?.value
-        },
-        searchType: 'KEYWORD',
-        page: event.pageIndex,
-        pageSize: event.pageSize
-      };
+    const searchRequest: SearchRequest = {
+      filters: {
+        query: query,
+        tags: this.searchForm.get('tags')?.value,
+        dateFrom: this.searchForm.get('dateFrom')?.value,
+        dateTo: this.searchForm.get('dateTo')?.value,
+        sharingLevel: this.searchForm.get('sharingLevel')?.value || undefined,
+        groupId: this.searchForm.get('groupId')?.value || undefined,
+        sortBy: this.searchForm.get('sortBy')?.value
+      },
+      searchType: 'KEYWORD',
+      page: event.pageIndex,
+      pageSize: event.pageSize
+    };
 
-      this.searchService.searchDocuments(searchRequest).subscribe({
-        next: (response) => this.searchResults = response
-      });
-    }
+    this.searchService.searchDocuments(searchRequest).subscribe({
+      next: (response) => this.searchResults = response,
+      error: (err) => {
+        console.error('Pagination search failed', err);
+        this.searching = false;
+      }
+    });
   }
 
   getActiveFiltersCount(): number {
@@ -242,9 +234,16 @@ export class SearchComponent implements OnInit {
     this.searchPerformed = false;
     this.searchResults = {
       documents: [],
-      totalCount: 0,
-      page: 0,
-      totalPages: 0
+      currentPage: 0,
+      totalPages: 0,
+      totalElements: 0,
+      pageSize: 10,
+      tagFacets: null,
+      fileTypeFacets: null,
+      sharingLevelFacets: null,
+      ownerFacets: null,
+      query: null,
+      searchTimeMs: 0
     };
   }
 

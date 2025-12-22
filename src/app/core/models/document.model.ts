@@ -7,6 +7,7 @@
  *   "summary": "Complete Angular tutorial",
  *   "content": null,
  *   "filePath": "ff9d263b-ec0f-4b2f-a6d6-7f0cc071f51a.png",
+ *   "fileName": "angular-guide.pdf",
  *   "fileType": "IMAGE",
  *   "fileSize": 112993,
  *   "sharingLevel": "PUBLIC",
@@ -14,8 +15,12 @@
  *   "isArchived": false,
  *   "ownerId": 1,
  *   "ownerUsername": "admin",
+ *   "ownerEmail": "admin@example.com",
  *   "averageRating": 5.0,
  *   "ratingCount": 1,
+ *   "totalRatings": 1,
+ *   "downloadCount": 45,
+ *   "isFavorited": true,
  *   "createdAt": "2025-12-17T01:07:23.288084",
  *   "updatedAt": "2025-12-17T01:07:23.288084",
  *   "tags": ["Angular", "Frontend"],
@@ -28,6 +33,7 @@ export interface DocumentModel {
   summary: string;
   content?: string | null;
   filePath: string;
+  fileName?: string;
   fileType: string;
   fileSize: number;
   sharingLevel: 'PUBLIC' | 'PRIVATE' | 'GROUP';
@@ -35,8 +41,12 @@ export interface DocumentModel {
   isArchived: boolean;
   ownerId: number;
   ownerUsername: string;
+  ownerEmail?: string;
   averageRating: number;
   ratingCount: number;
+  totalRatings?: number;
+  downloadCount?: number;
+  isFavorited?: boolean;
   createdAt: string;
   updatedAt: string;
   tags: string[];

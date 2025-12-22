@@ -1,9 +1,28 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { Document, Group } from '../models/document.model';
+import { Document } from '../models/document.model';
 import { environment } from '../../../environments/environment';
+
+export interface Tag {
+  id: number;
+  name: string;
+  description: string;
+  documentCount: number;
+  createdAt: string;
+}
+
+export interface Group {
+  id: number;
+  name: string;
+  description: string;
+  memberCount: number;
+  documentCount: number;
+  memberUsernames: string[];
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface SearchFilters {
   query?: string;
@@ -12,7 +31,9 @@ export interface SearchFilters {
   dateTo?: Date;
   groupId?: number;
   sharingLevel?: 'PRIVATE' | 'GROUP' | 'DEPARTMENT' | 'PUBLIC';
-  sortBy?: 'recent' | 'oldest' | 'popular' | 'title';
+  fileType?: string;
+  minRating?: number;
+  sortBy?: 'recent' | 'oldest' | 'popular' | 'title' | 'rating' | 'relevance';
 }
 
 export interface SearchRequest {
@@ -24,36 +45,29 @@ export interface SearchRequest {
 
 export interface SearchResponse {
   documents: Document[];
-  totalCount: number;
-  page: number;
+  currentPage: number;
   totalPages: number;
+  totalElements: number;
+  pageSize: number;
+  tagFacets: { [key: string]: number } | null;
+  fileTypeFacets: { [key: string]: number } | null;
+  sharingLevelFacets: { [key: string]: number } | null;
+  ownerFacets: { [key: string]: number } | null;
+  query: string | null;
+  searchTimeMs: number;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class SearchService {
-  private apiUrl = `${environment.apiUrl}/documents`;
-
-  private mockTags = [
-    'Angular', 'Spring Boot', 'TypeScript', 'Java', 'REST API', 'Database', 
-    'Security', 'Testing', 'Best Practices', 'Authentication', 'JWT', 
-    'Microservices', 'Docker', 'DevOps', 'CI/CD', 'Kubernetes', 'SQL', 
-    'JavaScript', 'Design Patterns', 'Architecture'
-  ];
-
-  private mockGroups: Group[] = [
-    { id: 1, name: 'Frontend Team', description: 'Frontend development team' },
-    { id: 2, name: 'Backend Team', description: 'Backend development team' },
-    { id: 3, name: 'DevOps Team', description: 'DevOps and infrastructure team' },
-    { id: 4, name: 'QA Team', description: 'Quality assurance team' }
-  ];
+  private apiUrl = `${environment.apiUrl}/search`;
 
   constructor(private http: HttpClient) {}
 
   /**
    * Perform keyword-based search with filters
-   * GET /api/documents/search?q=...&tags=...&page=...&size=...
+   * GET /api/search?q=...&tags=...&page=...&size=...
    */
   searchDocuments(request: SearchRequest): Observable<SearchResponse> {
     let params = new HttpParams()
@@ -65,30 +79,40 @@ export class SearchService {
     if (request.filters.dateFrom) params = params.set('fromDate', request.filters.dateFrom.toISOString());
     if (request.filters.dateTo) params = params.set('toDate', request.filters.dateTo.toISOString());
     if (request.filters.sharingLevel) params = params.set('sharingLevel', request.filters.sharingLevel);
+    if (request.filters.fileType) params = params.set('fileType', request.filters.fileType);
+    if (request.filters.minRating) params = params.set('minRating', request.filters.minRating.toString());
     if (request.filters.sortBy) params = params.set('sortBy', request.filters.sortBy);
     
-    return this.http.get<SearchResponse>(`${this.apiUrl}/search`, { params }).pipe(
+    return this.http.get<SearchResponse>(this.apiUrl, { params }).pipe(
       catchError(error => {
         console.error('Search error:', error);
-        return of({ documents: [], totalCount: 0, page: 0, totalPages: 0 });
+        throw error;
       })
     );
   }
 
   /**
-   * Perform AI semantic search
-   * GET /api/documents/search/semantic?query=...&page=...&size=...
+   * Perform advanced search with all filters
+   * GET /api/search/advanced?query=...&tags=...&page=...&size=...
    */
-  semanticSearch(query: string, page: number, pageSize: number): Observable<SearchResponse> {
-    const params = new HttpParams()
-      .set('query', query)
-      .set('page', page.toString())
-      .set('size', pageSize.toString());
+  advancedSearch(request: SearchRequest): Observable<SearchResponse> {
+    let params = new HttpParams()
+      .set('page', request.page.toString())
+      .set('size', request.pageSize.toString());
     
-    return this.http.get<SearchResponse>(`${this.apiUrl}/search/semantic`, { params }).pipe(
+    if (request.filters.query) params = params.set('query', request.filters.query);
+    if (request.filters.tags?.length) params = params.set('tags', request.filters.tags.join(','));
+    if (request.filters.dateFrom) params = params.set('fromDate', request.filters.dateFrom.toISOString());
+    if (request.filters.dateTo) params = params.set('toDate', request.filters.dateTo.toISOString());
+    if (request.filters.sharingLevel) params = params.set('sharingLevel', request.filters.sharingLevel);
+    if (request.filters.fileType) params = params.set('fileType', request.filters.fileType);
+    if (request.filters.minRating) params = params.set('minRating', request.filters.minRating.toString());
+    if (request.filters.sortBy) params = params.set('sortBy', request.filters.sortBy);
+    
+    return this.http.get<SearchResponse>(`${this.apiUrl}/advanced`, { params }).pipe(
       catchError(error => {
-        console.error('Semantic search error:', error);
-        return of({ documents: [], totalCount: 0, page: 0, totalPages: 0 });
+        console.error('Advanced search error:', error);
+        throw error;
       })
     );
   }
@@ -97,9 +121,12 @@ export class SearchService {
    * Get all available tags for filter dropdown
    * GET /api/tags
    */
-  getAllTags(): Observable<string[]> {
-    return this.http.get<string[]>(`${environment.apiUrl}/tags`).pipe(
-      catchError(() => of(this.mockTags))
+  getAllTags(): Observable<Tag[]> {
+    return this.http.get<Tag[]>(`${environment.apiUrl}/tags`).pipe(
+      catchError(error => {
+        console.error('Error loading tags:', error);
+        throw error;
+      })
     );
   }
 
@@ -109,7 +136,10 @@ export class SearchService {
    */
   getAllGroups(): Observable<Group[]> {
     return this.http.get<Group[]>(`${environment.apiUrl}/groups`).pipe(
-      catchError(() => of(this.mockGroups))
+      catchError(error => {
+        console.error('Error loading groups:', error);
+        throw error;
+      })
     );
   }
 }

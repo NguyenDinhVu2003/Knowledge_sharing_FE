@@ -52,8 +52,8 @@
           <mat-form-field appearance="outline">
             <mat-label>Tags</mat-label>
             <mat-select formControlName="tags" multiple>
-              <mat-option *ngFor="let tag of availableTags" [value]="tag">
-                {{ tag }}
+              <mat-option *ngFor="let tag of availableTags" [value]="tag.name">
+                {{ tag.name }}
               </mat-option>
             </mat-select>
             <mat-hint>Select multiple tags</mat-hint>
@@ -130,7 +130,7 @@
     <!-- Results Header -->
     <div *ngIf="!searching && searchPerformed" class="results-header">
       <h2>
-        {{ searchResults.totalCount }} result(s) found
+        {{ searchResults.totalElements }} result(s) found
         <span *ngIf="isSemanticSearch" class="ai-badge">
           <mat-icon>auto_awesome</mat-icon>
           AI Powered
@@ -138,14 +138,14 @@
       </h2>
       <p class="search-info">
         Search query: "<strong>{{ lastSearchQuery }}</strong>"
-        <span *ngIf="searchResults.totalCount > 0">
-          | Page {{ searchResults.page + 1 }} of {{ searchResults.totalPages }}
+        <span *ngIf="searchResults.totalElements > 0">
+          | Page {{ searchResults.currentPage + 1 }} of {{ searchResults.totalPages }}
         </span>
       </p>
     </div>
 
     <!-- No Results -->
-    <mat-card *ngIf="!searching && searchPerformed && searchResults.totalCount === 0" 
+    <mat-card *ngIf="!searching && searchPerformed && searchResults.totalElements === 0" 
               class="no-results">
       <mat-icon>search_off</mat-icon>
       <h3>No documents found</h3>
@@ -170,10 +170,10 @@
 
     <!-- Pagination -->
     <mat-paginator 
-      *ngIf="!searching && searchResults.totalCount > 0"
-      [length]="searchResults.totalCount"
+      *ngIf="!searching && searchResults.totalElements > 0"
+      [length]="searchResults.totalElements"
       [pageSize]="pageSize"
-      [pageIndex]="searchResults.page"
+      [pageIndex]="searchResults.currentPage"
       [pageSizeOptions]="[10, 25, 50]"
       (page)="onPageChange($event)"
       showFirstLastButtons>
