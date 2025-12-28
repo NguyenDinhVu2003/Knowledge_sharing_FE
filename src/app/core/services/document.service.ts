@@ -160,27 +160,27 @@ export class DocumentService {
   }
 
   getDocumentVersions(docId: number): Observable<DocumentVersion[]> {
-    return this.http.get<DocumentVersion[]>(`//versions`).pipe(
+    return this.http.get<DocumentVersion[]>(`${this.apiUrl}/${docId}/versions`).pipe(
       catchError(error => {
-        console.error(`Error fetching versions for document :`, error);
+        console.error(`Error fetching versions for document ${docId}:`, error);
         return throwError(() => error);
       })
     );
   }
 
   rateDocument(docId: number, rating: number): Observable<void> {
-    return this.http.post<void>(`//rate`, { rating }).pipe(
+    return this.http.post<void>(`${this.apiUrl}/${docId}/rate`, { rating }).pipe(
       catchError(error => {
-        console.error(`Error rating document :`, error);
+        console.error(`Error rating document ${docId}:`, error);
         return throwError(() => error);
       })
     );
   }
 
   getRelatedDocuments(docId: number): Observable<Document[]> {
-    return this.http.get<Document[]>(`//related`).pipe(
+    return this.http.get<Document[]>(`${this.apiUrl}/${docId}/related`).pipe(
       catchError(error => {
-        console.error(`Error fetching related documents for :`, error);
+        console.error(`Error fetching related documents for ${docId}:`, error);
         return throwError(() => error);
       })
     );
