@@ -146,6 +146,70 @@
         }
       }
 
+      .document-card {
+        cursor: pointer;
+        height: 100%;
+        transition: all 0.2s ease;
+
+        &:hover {
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        mat-card-header {
+          mat-card-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 4px;
+          }
+
+          mat-card-subtitle {
+            font-size: 13px;
+            color: #666;
+          }
+        }
+
+        mat-card-content {
+          .summary {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+
+          .rating, .date {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+            color: #666;
+            margin-top: 8px;
+
+            mat-icon {
+              font-size: 16px;
+              height: 16px;
+              width: 16px;
+            }
+          }
+
+          .rating {
+            mat-icon {
+              color: #ffc107;
+            }
+          }
+
+          .date {
+            mat-icon {
+              color: #999;
+            }
+          }
+        }
+      }
+
       .remove-btn {
         position: absolute;
         top: 12px;

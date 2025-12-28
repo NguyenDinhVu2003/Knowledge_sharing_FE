@@ -67,7 +67,6 @@ export class DocumentDetailComponent implements OnInit {
   ratingStars = [1, 2, 3, 4, 5];
   isOwner = false;
   isFavorited = false;
-  favoriteId: number | null = null;
 
   ngOnInit(): void {
     // Subscribe to route params to reload when navigating back from edit
@@ -152,15 +151,12 @@ export class DocumentDetailComponent implements OnInit {
   }
 
   checkFavoriteStatus(docId: number): void {
-    this.favoriteService.isFavorited(docId).subscribe(favorited => {
-      this.isFavorited = favorited;
-      
-      // Get the favorite ID if it's favorited
-      if (favorited) {
-        this.favoriteService.getFavorites().subscribe(favorites => {
-          const favorite = favorites.find(f => f.documentId === docId);
-          this.favoriteId = favorite ? favorite.id : null;
-        });
+    this.favoriteService.isFavorited(docId).subscribe({
+      next: (favorited) => {
+        this.isFavorited = favorited;
+      },
+      error: (error) => {
+        console.error('Error checking favorite status:', error);
       }
     });
   }
@@ -230,12 +226,11 @@ export class DocumentDetailComponent implements OnInit {
       return;
     }
     
-    if (this.isFavorited && this.favoriteId) {
-      // Remove from favorites
-      this.favoriteService.removeFavorite(this.favoriteId).subscribe({
+    if (this.isFavorited) {
+      // Remove from favorites using documentId
+      this.favoriteService.removeFavorite(this.document.id).subscribe({
         next: () => {
           this.isFavorited = false;
-          this.favoriteId = null;
           const snackBarRef = this.snackBar.open('Removed from favorites', 'Undo', { duration: 3000 });
           
           snackBarRef.onAction().subscribe(() => {
@@ -260,9 +255,8 @@ export class DocumentDetailComponent implements OnInit {
     if (!currentUser) return;
 
     this.favoriteService.addFavorite(document.id).subscribe({
-      next: (favorite) => {
+      next: () => {
         this.isFavorited = true;
-        this.favoriteId = favorite.id;
         this.snackBar.open('Added to favorites', 'Close', { duration: 2000 });
       },
       error: (error) => {

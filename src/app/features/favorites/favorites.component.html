@@ -74,12 +74,23 @@
     <div *ngIf="viewMode === 'grid'" class="favorites-grid">
       <div *ngFor="let favorite of sortedFavorites$ | async" class="favorite-item">
         <!-- Document Card -->
-        <app-document-card 
-          *ngIf="favorite.document"
-          [document]="favorite.document"
-          [showActions]="false"
-          (cardClicked)="navigateToDocument($event)">
-        </app-document-card>
+        <mat-card class="document-card" (click)="navigateToDocument(favorite.documentId)">
+          <mat-card-header>
+            <mat-card-title>{{ favorite.documentTitle }}</mat-card-title>
+            <mat-card-subtitle>by {{ favorite.ownerUsername }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <p class="summary">{{ favorite.documentSummary }}</p>
+            <div class="rating">
+              <mat-icon>star</mat-icon>
+              <span>{{ favorite.averageRating || 'N/A' }}</span>
+            </div>
+            <div class="date">
+              <mat-icon>access_time</mat-icon>
+              <span>Added {{ favorite.createdAt | date:'short' }}</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
         
         <!-- Remove Button (floating) -->
         <button mat-mini-fab 
@@ -100,29 +111,24 @@
                        (click)="navigateToDocument(favorite.documentId)">
           
           <!-- File Type Icon -->
-          <mat-icon matListItemIcon [class]="getFileTypeClass(favorite.document!.fileType)">
-            {{ getFileTypeIcon(favorite.document!.fileType) }}
+          <mat-icon matListItemIcon>
+            description
           </mat-icon>
 
-          <!-- Document Title + Tags -->
+          <!-- Document Title -->
           <div matListItemTitle class="list-title">
-            {{ favorite.document!.title }}
-            <mat-chip-set class="inline-tags" *ngIf="favorite.document!.tags && favorite.document!.tags.length > 0">
-              <mat-chip *ngFor="let tag of favorite.document!.tags.slice(0, 3)">
-                {{ tag }}
-              </mat-chip>
-            </mat-chip-set>
+            {{ favorite.documentTitle }}
           </div>
 
           <!-- Meta Info (owner, rating, date) -->
           <div matListItemLine class="list-meta">
             <span class="owner">
               <mat-icon inline>person</mat-icon>
-              {{ favorite.document!.ownerUsername }}
+              {{ favorite.ownerUsername }}
             </span>
             <span class="rating">
               <mat-icon inline>star</mat-icon>
-              {{ favorite.document!.averageRating || 'N/A' }}
+              {{ favorite.averageRating || 'N/A' }}
             </span>
             <span class="date">
               <mat-icon inline>access_time</mat-icon>

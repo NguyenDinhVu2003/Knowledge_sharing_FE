@@ -1,10 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, of, throwError } from 'rxjs';
-import { tap, map, delay, catchError } from 'rxjs/operators';
+import { Observable, BehaviorSubject, throwError } from 'rxjs';
+import { tap, map, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { Favorite } from '../models/favorite.model';
-import { Document } from '../models/document.model';
+import { Favorite, FavoriteCheckResponse, FavoriteCountResponse } from '../models/favorite.model';
 
 @Injectable({
   providedIn: 'root'
@@ -13,248 +12,91 @@ export class FavoriteService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/favorites`;
   
-  // State management
+  // State management for caching
   private favoritesSubject = new BehaviorSubject<Favorite[]>([]);
   public favorites$ = this.favoritesSubject.asObservable();
-
-  // Mock data
-  private mockFavorites: Favorite[] = [];
-  private mockIdCounter = 1;
-
-  constructor() {
-    this.loadMockData();
-  }
-
-  /**
-   * Initialize mock data with sample favorites
-   */
-  private loadMockData(): void {
-    this.mockFavorites = [
-      {
-        id: 1,
-        documentId: 1,
-        userId: 1,
-        createdAt: new Date('2025-12-10T08:30:00Z'),
-        document: {
-          id: 1,
-          title: 'Angular Best Practices 2025',
-          summary: 'Complete guide to modern Angular development with signals, zoneless change detection, and standalone components.',
-          filePath: '/files/angular-2025.pdf',
-          fileType: 'PDF',
-          fileSize: 2048000,
-          ownerId: 1,
-          ownerUsername: 'John Doe',
-          sharingLevel: 'PUBLIC',
-          versionNumber: 1,
-          isArchived: false,
-          averageRating: 4.8,
-          ratingCount: 10,
-          createdAt: '2025-12-14T10:30:00Z',
-          updatedAt: '2025-12-14T10:30:00Z',
-          tags: ['Angular', 'Frontend', 'Best Practices'],
-          groupIds: []
-        }
-      },
-      {
-        id: 2,
-        documentId: 3,
-        userId: 1,
-        createdAt: new Date('2025-12-11T14:15:00Z'),
-        document: {
-          id: 3,
-          title: 'RxJS Operators Handbook',
-          summary: 'Comprehensive guide to RxJS operators with practical examples. Learn how to handle async operations efficiently.',
-          filePath: '/files/rxjs-operators.pdf',
-          fileType: 'PDF',
-          fileSize: 1843200,
-          ownerId: 1,
-          ownerUsername: 'John Doe',
-          sharingLevel: 'PUBLIC',
-          versionNumber: 1,
-          isArchived: false,
-          averageRating: 4.7,
-          ratingCount: 8,
-          createdAt: '2025-12-12T11:00:00Z',
-          updatedAt: '2025-12-12T11:00:00Z',
-          tags: ['RxJS', 'Angular', 'Reactive Programming'],
-          groupIds: []
-        }
-      },
-      {
-        id: 3,
-        documentId: 5,
-        userId: 1,
-        createdAt: new Date('2025-12-12T09:00:00Z'),
-        document: {
-          id: 5,
-          title: 'Docker for Developers',
-          summary: 'Introduction to Docker containers, images, Docker Compose, and container orchestration.',
-          filePath: '/files/docker-guide.pdf',
-          fileType: 'PDF',
-          fileSize: 2621440,
-          ownerId: 3,
-          ownerUsername: 'Bob Wilson',
-          sharingLevel: 'PUBLIC',
-          versionNumber: 1,
-          isArchived: false,
-          averageRating: 4.6,
-          ratingCount: 5,
-          createdAt: '2025-12-08T13:20:00Z',
-          updatedAt: '2025-12-08T13:20:00Z',
-          tags: ['Docker', 'DevOps', 'Containers'],
-          groupIds: []
-        }
-      }
-    ];
-    
-    this.mockIdCounter = this.mockFavorites.length + 1;
-    this.favoritesSubject.next([...this.mockFavorites]);
-  }
 
   /**
    * Get all favorites for current user
    * GET /api/favorites
-   * @returns Observable of Favorite array with populated document details
+   * @returns Observable of Favorite array
    */
   getFavorites(): Observable<Favorite[]> {
-    // MOCK IMPLEMENTATION
-    return of([...this.mockFavorites]).pipe(
-      delay(300),
-      tap(favorites => this.favoritesSubject.next(favorites)),
-      catchError(err => {
-        console.error('Failed to load favorites', err);
-        return of([]);
-      })
-    );
-
-    /* ACTUAL API IMPLEMENTATION - Uncomment when backend is ready
     return this.http.get<Favorite[]>(this.apiUrl).pipe(
       tap(favorites => this.favoritesSubject.next(favorites)),
       catchError(err => {
         console.error('Failed to load favorites', err);
-        return of([]);
+        return throwError(() => err);
       })
     );
-    */
   }
 
   /**
    * Add document to favorites
-   * POST /api/favorites
+   * POST /api/favorites/documents/{documentId}
    * @param documentId - ID of document to add
    * @returns Observable of created Favorite object
    */
   addFavorite(documentId: number): Observable<Favorite> {
-    // MOCK IMPLEMENTATION
-    // Check if already favorited
-    const existing = this.mockFavorites.find(f => f.documentId === documentId);
-    if (existing) {
-      return of(existing).pipe(delay(200));
-    }
-
-    // Create new favorite (in real app, backend will populate document)
-    const newFavorite: Favorite = {
-      id: this.mockIdCounter++,
-      documentId: documentId,
-      userId: 1, // Current user
-      createdAt: new Date()
-      // document will be populated by backend
-    };
-
-    this.mockFavorites.push(newFavorite);
-    this.favoritesSubject.next([...this.mockFavorites]);
-
-    return of(newFavorite).pipe(
-      delay(200),
+    return this.http.post<Favorite>(`${this.apiUrl}/documents/${documentId}`, {}).pipe(
+      tap(() => this.refreshFavorites()),
       catchError(err => {
         console.error('Failed to add favorite', err);
         return throwError(() => err);
       })
     );
-
-    /* ACTUAL API IMPLEMENTATION - Uncomment when backend is ready
-    return this.http.post<Favorite>(this.apiUrl, { documentId }).pipe(
-      tap(favorite => {
-        this.mockFavorites.push(favorite);
-        this.favoritesSubject.next([...this.mockFavorites]);
-      }),
-      catchError(err => {
-        console.error('Failed to add favorite', err);
-        return throwError(() => err);
-      })
-    );
-    */
   }
 
   /**
-   * Remove favorite by ID
-   * DELETE /api/favorites/{id}
-   * @param favoriteId - ID of favorite to remove
-   * @returns Observable<void>
+   * Remove favorite by document ID
+   * DELETE /api/favorites/documents/{documentId}
+   * @param documentId - ID of document to remove from favorites
+   * @returns Observable<{message: string}>
    */
-  removeFavorite(favoriteId: number): Observable<void> {
-    // MOCK IMPLEMENTATION
-    const index = this.mockFavorites.findIndex(f => f.id === favoriteId);
-    if (index > -1) {
-      this.mockFavorites.splice(index, 1);
-      this.favoritesSubject.next([...this.mockFavorites]);
-    }
-
-    return of(void 0).pipe(
-      delay(200),
+  removeFavorite(documentId: number): Observable<{message: string}> {
+    return this.http.delete<{message: string}>(`${this.apiUrl}/documents/${documentId}`).pipe(
+      tap(() => this.refreshFavorites()),
       catchError(err => {
         console.error('Failed to remove favorite', err);
         return throwError(() => err);
       })
     );
-
-    /* ACTUAL API IMPLEMENTATION - Uncomment when backend is ready
-    return this.http.delete<void>(`${this.apiUrl}/${favoriteId}`).pipe(
-      tap(() => {
-        const index = this.mockFavorites.findIndex(f => f.id === favoriteId);
-        if (index > -1) {
-          this.mockFavorites.splice(index, 1);
-          this.favoritesSubject.next([...this.mockFavorites]);
-        }
-      }),
-      catchError(err => {
-        console.error('Failed to remove favorite', err);
-        return throwError(() => err);
-      })
-    );
-    */
-  }
-
-  /**
-   * Remove favorite by document ID (helper method)
-   * @param documentId - ID of document to unfavorite
-   * @returns Observable<void>
-   */
-  removeFavoriteByDocumentId(documentId: number): Observable<void> {
-    const favorite = this.mockFavorites.find(f => f.documentId === documentId);
-    if (favorite) {
-      return this.removeFavorite(favorite.id);
-    }
-    return of(void 0);
   }
 
   /**
    * Check if document is favorited by current user
+   * GET /api/favorites/documents/{documentId}/check
    * @param documentId - ID of document to check
    * @returns Observable<boolean>
    */
   isFavorited(documentId: number): Observable<boolean> {
-    // MOCK IMPLEMENTATION
-    const favorited = this.mockFavorites.some(f => f.documentId === documentId);
-    return of(favorited).pipe(delay(100));
-
-    /* ACTUAL API IMPLEMENTATION - Uncomment when backend is ready
-    return this.http.get<boolean>(`${this.apiUrl}/check/${documentId}`);
-    */
+    return this.http.get<FavoriteCheckResponse>(`${this.apiUrl}/documents/${documentId}/check`).pipe(
+      map(response => response.isFavorited),
+      catchError(err => {
+        console.error('Failed to check favorite status', err);
+        return throwError(() => err);
+      })
+    );
   }
 
   /**
-   * Get count of favorites for badge display
+   * Get count of favorites for a specific document
+   * GET /api/favorites/documents/{documentId}/count
+   * @param documentId - ID of document
+   * @returns Observable<number>
+   */
+  getFavoriteCountByDocument(documentId: number): Observable<number> {
+    return this.http.get<FavoriteCountResponse>(`${this.apiUrl}/documents/${documentId}/count`).pipe(
+      map(response => response.count),
+      catchError(err => {
+        console.error('Failed to get favorite count', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  /**
+   * Get count of user's favorites for badge display
    * @returns Observable<number>
    */
   getFavoriteCount(): Observable<number> {

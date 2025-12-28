@@ -26,7 +26,6 @@ import { Favorite } from '../../core/models/favorite.model';
 // Shared Components
 import { HeaderComponent } from '../../shared/components/header/header.component';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
-import { DocumentCardComponent } from '../../shared/components/document-card/document-card.component';
 
 @Component({
   selector: 'app-favorites',
@@ -48,8 +47,7 @@ import { DocumentCardComponent } from '../../shared/components/document-card/doc
     MatTooltipModule,
     MatSnackBarModule,
     HeaderComponent,
-    FooterComponent,
-    DocumentCardComponent
+    FooterComponent
   ],
   templateUrl: './favorites.component.html',
   styleUrls: ['./favorites.component.scss']
@@ -94,7 +92,6 @@ export class FavoritesComponent implements OnInit {
         console.log('Favorites count:', favorites.length);
         if (favorites.length > 0) {
           console.log('First favorite:', favorites[0]);
-          console.log('First favorite document:', favorites[0].document);
         }
         this.loading = false;
         this.applySorting();
@@ -146,12 +143,12 @@ export class FavoritesComponent implements OnInit {
             break;
           case 'title':
             sorted.sort((a, b) => 
-              a.document!.title.localeCompare(b.document!.title)
+              a.documentTitle.localeCompare(b.documentTitle)
             );
             break;
           case 'rating':
             sorted.sort((a, b) => 
-              (b.document!.averageRating || 0) - (a.document!.averageRating || 0)
+              (b.averageRating || 0) - (a.averageRating || 0)
             );
             break;
         }
@@ -172,7 +169,7 @@ export class FavoritesComponent implements OnInit {
    * Confirm and remove favorite
    */
   confirmRemove(favorite: Favorite): void {
-    const confirmed = window.confirm(`Remove "${favorite.document!.title}" from favorites?`);
+    const confirmed = window.confirm(`Remove "${favorite.documentTitle}" from favorites?`);
     if (confirmed) {
       this.removeFavorite(favorite);
     }
@@ -182,7 +179,7 @@ export class FavoritesComponent implements OnInit {
    * Remove favorite with undo option
    */
   removeFavorite(favorite: Favorite): void {
-    this.favoriteService.removeFavorite(favorite.id).subscribe({
+    this.favoriteService.removeFavorite(favorite.documentId).subscribe({
       next: () => {
         const snackBarRef = this.snackBar.open('Removed from favorites', 'Undo', { 
           duration: 3000,
@@ -235,7 +232,7 @@ export class FavoritesComponent implements OnInit {
       if (favorites.length === 0) return;
 
       const removePromises = favorites.map(f => 
-        this.favoriteService.removeFavorite(f.id).toPromise()
+        this.favoriteService.removeFavorite(f.documentId).toPromise()
       );
 
       Promise.all(removePromises).then(() => {
@@ -254,28 +251,5 @@ export class FavoritesComponent implements OnInit {
         });
       });
     });
-  }
-
-  /**
-   * Get file type icon name
-   */
-  getFileTypeIcon(fileType: string): string {
-    const icons: { [key: string]: string } = {
-      'PDF': 'picture_as_pdf',
-      'DOC': 'description',
-      'DOCX': 'description',
-      'IMAGE': 'image',
-      'PNG': 'image',
-      'JPG': 'image',
-      'JPEG': 'image'
-    };
-    return icons[fileType.toUpperCase()] || 'insert_drive_file';
-  }
-
-  /**
-   * Get file type CSS class
-   */
-  getFileTypeClass(fileType: string): string {
-    return `file-type-${fileType.toLowerCase()}`;
   }
 }
