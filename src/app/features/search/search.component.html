@@ -80,7 +80,6 @@
             <mat-select formControlName="sharingLevel">
               <mat-option value="">All</mat-option>
               <mat-option value="PUBLIC">🌐 Public</mat-option>
-              <mat-option value="DEPARTMENT">🏢 Department</mat-option>
               <mat-option value="GROUP">👥 Group</mat-option>
               <mat-option value="PRIVATE">🔒 Private</mat-option>
             </mat-select>
@@ -164,7 +163,11 @@
     <div *ngIf="!searching && searchResults.documents.length > 0" class="results-grid">
       <app-document-card 
         *ngFor="let doc of searchResults.documents; trackBy: trackByDocId"
-        [document]="doc">
+        [document]="doc"
+        [showActions]="true"
+        [currentUserId]="currentUserId"
+        (cardClicked)="navigateToDocument($event)"
+        (actionClicked)="onActionClicked($event)">
       </app-document-card>
     </div>
 

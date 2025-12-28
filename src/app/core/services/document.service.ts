@@ -60,19 +60,19 @@ export class DocumentService {
     return this.createDocument(formData);
   }
 
-  updateDocument(id: number, data: FormData | Partial<Document>): Observable<Document> {
-    return this.http.put<Document>(`/`, data).pipe(
+  updateDocument(id: number, formData: FormData): Observable<Document> {
+    return this.http.put<Document>(`${this.apiUrl}/${id}`, formData).pipe(
       catchError(error => {
-        console.error(`Error updating document :`, error);
+        console.error(`Error updating document ${id}:`, error);
         return throwError(() => error);
       })
     );
   }
 
   deleteDocument(id: number): Observable<void> {
-    return this.http.delete<void>(`/`).pipe(
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
       catchError(error => {
-        console.error(`Error deleting document :`, error);
+        console.error(`Error deleting document ${id}:`, error);
         return throwError(() => error);
       })
     );
@@ -205,7 +205,7 @@ export class DocumentService {
   }
 
   getAvailableGroups(): Observable<Group[]> {
-    return this.http.get<Group[]>(`/groups`).pipe(
+    return this.http.get<Group[]>(`${environment.apiUrl}/groups`).pipe(
       catchError(error => {
         console.error('Error fetching groups:', error);
         return throwError(() => error);

@@ -60,17 +60,13 @@ export class DocumentEditComponent implements OnInit {
   fileError = '';
   loading = true;
   saving = false;
-  generatingSummary = false;
-  generatingTags = false;
   
-  availableGroups: Group[] = [];
   tags: string[] = [];
   newTag = '';
   uploadNewVersion = false;
 
   sharingLevels = [
     { value: 'PUBLIC', label: 'Public - Everyone can access' },
-    { value: 'DEPARTMENT', label: 'Department - Department members only' },
     { value: 'GROUP', label: 'Group - Selected groups only' },
     { value: 'PRIVATE', label: 'Private - Only me' }
   ];
@@ -79,11 +75,10 @@ export class DocumentEditComponent implements OnInit {
     '.doc', '.docx', '.pdf', '.xls', '.xlsx', 
     '.ppt', '.pptx', '.txt', '.png', '.jpg', '.jpeg', '.gif'
   ];
-  maxFileSize = 10 * 1024 * 1024; // 10MB
+  maxFileSize = 50 * 1024 * 1024; // 50MB (matching backend spec)
 
   ngOnInit(): void {
     this.initForm();
-    this.loadGroups();
     
     const docId = this.route.snapshot.paramMap.get('id');
     if (docId) {
@@ -93,34 +88,15 @@ export class DocumentEditComponent implements OnInit {
 
   initForm(): void {
     this.editForm = this.fb.group({
-      title: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(200)]],
-      summary: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(1000)]],
-      sharingLevel: ['PUBLIC', Validators.required],
-      groupIds: [[]],
-      versionNotes: ['', [Validators.maxLength(500)]]
-    });
-
-    // Watch sharing level changes
-    this.editForm.get('sharingLevel')?.valueChanges.subscribe(level => {
-      const groupControl = this.editForm.get('groupIds');
-      if (level === 'GROUP') {
-        groupControl?.setValidators([Validators.required]);
-      } else {
-        groupControl?.clearValidators();
-      }
-      groupControl?.updateValueAndValidity();
+      title: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255)]],
+      summary: ['', [Validators.maxLength(500)]],
+      sharingLevel: ['PUBLIC', Validators.required]
     });
   }
 
   loadGroups(): void {
-    this.documentService.getAvailableGroups().subscribe({
-      next: (groups) => {
-        this.availableGroups = groups;
-      },
-      error: (error) => {
-        console.error('Error loading groups:', error);
-      }
-    });
+    // Groups not needed for basic document edit
+    // Only used if sharingLevel is GROUP
   }
 
   loadDocument(id: number): void {
@@ -142,8 +118,7 @@ export class DocumentEditComponent implements OnInit {
         this.editForm.patchValue({
           title: doc.title,
           summary: doc.summary,
-          sharingLevel: doc.sharingLevel,
-          groupIds: doc.groupIds || []
+          sharingLevel: doc.sharingLevel
         });
 
         // Set tags
@@ -190,20 +165,12 @@ export class DocumentEditComponent implements OnInit {
 
     this.selectedFile = file;
     this.uploadNewVersion = true;
-    
-    // Make version notes required when uploading new version
-    this.editForm.get('versionNotes')?.setValidators([Validators.required, Validators.maxLength(500)]);
-    this.editForm.get('versionNotes')?.updateValueAndValidity();
   }
 
   removeFile(): void {
     this.selectedFile = null;
     this.fileError = '';
     this.uploadNewVersion = false;
-    
-    // Make version notes optional again
-    this.editForm.get('versionNotes')?.setValidators([Validators.maxLength(500)]);
-    this.editForm.get('versionNotes')?.updateValueAndValidity();
   }
 
   generateSummary(): void {
@@ -213,7 +180,10 @@ export class DocumentEditComponent implements OnInit {
       return;
     }
 
-    this.generatingSummary = true;
+    // TODO: Implement AI summary generation when backend API is ready
+    this.snackBar.open('AI summary generation not yet implemented', 'Close', { duration: 3000 });
+    
+    /* this.generatingSummary = true;
     this.documentService.generateSummary(title).subscribe({
       next: (summary) => {
         this.editForm.patchValue({ summary });
@@ -225,7 +195,7 @@ export class DocumentEditComponent implements OnInit {
         this.generatingSummary = false;
         this.snackBar.open('Failed to generate summary', 'Close', { duration: 3000 });
       }
-    });
+    }); */
   }
 
   generateTags(): void {
@@ -235,7 +205,10 @@ export class DocumentEditComponent implements OnInit {
       return;
     }
 
-    this.generatingTags = true;
+    // TODO: Implement AI tag suggestions when backend API is ready
+    this.snackBar.open('AI tag suggestions not yet implemented', 'Close', { duration: 3000 });
+    
+    /* this.generatingTags = true;
     this.documentService.suggestTags(content).subscribe({
       next: (response) => {
         // Add only new tags
@@ -252,7 +225,7 @@ export class DocumentEditComponent implements OnInit {
         this.generatingTags = false;
         this.snackBar.open('Failed to generate tags', 'Close', { duration: 3000 });
       }
-    });
+    }); */
   }
 
   addTag(): void {
@@ -283,24 +256,22 @@ export class DocumentEditComponent implements OnInit {
 
     this.saving = true;
     
-    // Create FormData
+    // Create data object for the document metadata
+    const documentData: any = {
+      title: this.editForm.get('title')?.value,
+      summary: this.editForm.get('summary')?.value || '',
+      sharingLevel: this.editForm.get('sharingLevel')?.value,
+      tags: this.tags
+    };
+
+    // Create FormData with 'data' as JSON blob (matching backend API)
     const formData = new FormData();
+    const dataBlob = new Blob([JSON.stringify(documentData)], { type: 'application/json' });
+    formData.append('data', dataBlob);
+    
+    // Add file only if user selected a new file (optional)
     if (this.selectedFile) {
       formData.append('file', this.selectedFile);
-    }
-    formData.append('title', this.editForm.get('title')?.value);
-    formData.append('summary', this.editForm.get('summary')?.value);
-    formData.append('sharing_level', this.editForm.get('sharingLevel')?.value);
-    formData.append('tags', JSON.stringify(this.tags));
-    
-    const groupIds = this.editForm.get('groupIds')?.value;
-    if (groupIds && groupIds.length > 0) {
-      formData.append('group_ids', JSON.stringify(groupIds));
-    }
-
-    const versionNotes = this.editForm.get('versionNotes')?.value;
-    if (versionNotes) {
-      formData.append('version_notes', versionNotes);
     }
 
     this.documentService.updateDocument(this.document.id, formData).subscribe({
@@ -334,6 +305,7 @@ export class DocumentEditComponent implements OnInit {
   }
 
   get showGroupSelection(): boolean {
-    return this.editForm.get('sharingLevel')?.value === 'GROUP';
+    // Groups not supported in current API version
+    return false;
   }
 }

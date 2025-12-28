@@ -16,12 +16,17 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatListModule } from '@angular/material/list';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { SearchService, SearchRequest, SearchResponse, Tag, Group } from '../../core/services/search.service';
+import { AuthService } from '../../core/services/auth.service';
+import { DocumentService } from '../../core/services/document.service';
 import { Document } from '../../core/models/document.model';
 import { HeaderComponent } from '../../shared/components/header/header.component';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { DocumentCardComponent } from '../../shared/components/document-card/document-card.component';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-search',
@@ -43,6 +48,8 @@ import { DocumentCardComponent } from '../../shared/components/document-card/doc
     MatPaginatorModule,
     MatChipsModule,
     MatListModule,
+    MatDialogModule,
+    MatSnackBarModule,
     HeaderComponent,
     FooterComponent,
     DocumentCardComponent
@@ -54,10 +61,15 @@ import { DocumentCardComponent } from '../../shared/components/document-card/doc
 export class SearchComponent implements OnInit {
   private fb = inject(FormBuilder);
   private searchService = inject(SearchService);
+  private authService = inject(AuthService);
+  private documentService = inject(DocumentService);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
   private cdr = inject(ChangeDetectorRef);
 
   searchForm!: FormGroup;
+  currentUserId: number | null = null;
   searchResults: SearchResponse = {
     documents: [],
     currentPage: 0,
@@ -85,6 +97,10 @@ export class SearchComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Get current user ID
+    const currentUser = this.authService.getCurrentUser();
+    this.currentUserId = currentUser?.id ?? null;
+    
     this.initForm();
     this.loadFilterOptions();
 
@@ -277,7 +293,62 @@ export class SearchComponent implements OnInit {
   }
 
   navigateToDocument(documentId: number) {
+    console.log('Navigating to document:', documentId);
     this.router.navigate(['/documents', documentId]);
+  }
+
+  /**
+   * Handle action clicks from document cards
+   */
+  onActionClicked(event: { action: string; documentId: number }): void {
+    switch (event.action) {
+      case 'view':
+        this.router.navigate(['/documents', event.documentId]);
+        break;
+      case 'edit':
+        this.router.navigate(['/documents', event.documentId, 'edit']);
+        break;
+      case 'delete':
+        this.confirmAndDelete(event.documentId);
+        break;
+    }
+  }
+
+  confirmAndDelete(documentId: number): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Delete Document',
+        message: 'Are you sure you want to delete this document? This action cannot be undone.',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        type: 'danger'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.documentService.deleteDocument(documentId).subscribe({
+          next: () => {
+            this.snackBar.open('Document deleted successfully', 'Close', {
+              duration: 3000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top'
+            });
+            // Re-run the search to refresh results
+            this.performSearch();
+          },
+          error: (err) => {
+            console.error('Error deleting document:', err);
+            this.snackBar.open('Failed to delete document', 'Close', {
+              duration: 3000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top'
+            });
+          }
+        });
+      }
+    });
   }
 
   trackByDocId(index: number, doc: Document): number {
