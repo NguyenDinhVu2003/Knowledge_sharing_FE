@@ -17,7 +17,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 // Services and Models
@@ -28,7 +27,6 @@ import { Favorite } from '../../core/models/favorite.model';
 import { HeaderComponent } from '../../shared/components/header/header.component';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { DocumentCardComponent } from '../../shared/components/document-card/document-card.component';
-import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-favorites',
@@ -48,7 +46,6 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
     MatListModule,
     MatDividerModule,
     MatTooltipModule,
-    MatDialogModule,
     MatSnackBarModule,
     HeaderComponent,
     FooterComponent,
@@ -60,7 +57,6 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
 export class FavoritesComponent implements OnInit {
   private favoriteService = inject(FavoriteService);
   private router = inject(Router);
-  private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
 
   favorites$!: Observable<Favorite[]>;
@@ -176,21 +172,10 @@ export class FavoritesComponent implements OnInit {
    * Confirm and remove favorite
    */
   confirmRemove(favorite: Favorite): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
-      data: {
-        title: 'Remove Favorite',
-        message: `Remove "${favorite.document!.title}" from favorites?`,
-        confirmText: 'Remove',
-        cancelText: 'Cancel'
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(confirmed => {
-      if (confirmed) {
-        this.removeFavorite(favorite);
-      }
-    });
+    const confirmed = window.confirm(`Remove "${favorite.document!.title}" from favorites?`);
+    if (confirmed) {
+      this.removeFavorite(favorite);
+    }
   }
 
   /**
@@ -236,21 +221,10 @@ export class FavoritesComponent implements OnInit {
    * Confirm and remove all favorites
    */
   confirmRemoveAll(): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
-      data: {
-        title: 'Clear All Favorites',
-        message: 'Are you sure you want to remove ALL favorites? This action cannot be undone.',
-        confirmText: 'Clear All',
-        cancelText: 'Cancel'
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(confirmed => {
-      if (confirmed) {
-        this.removeAllFavorites();
-      }
-    });
+    const confirmed = window.confirm('Are you sure you want to remove ALL favorites? This action cannot be undone.');
+    if (confirmed) {
+      this.removeAllFavorites();
+    }
   }
 
   /**

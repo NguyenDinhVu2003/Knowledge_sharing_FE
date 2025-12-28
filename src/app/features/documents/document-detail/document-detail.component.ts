@@ -8,7 +8,6 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatListModule } from '@angular/material/list';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -21,7 +20,6 @@ import { FavoriteService } from '../../../core/services/favorite.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { DocumentCardComponent } from '../../../shared/components/document-card/document-card.component';
-import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-document-detail',
@@ -35,7 +33,6 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
     MatCardModule,
     MatExpansionModule,
     MatListModule,
-    MatDialogModule,
     MatSnackBarModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
@@ -54,7 +51,6 @@ export class DocumentDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private sanitizer = inject(DomSanitizer);
-  private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private platformId = inject(PLATFORM_ID);
 
@@ -295,27 +291,22 @@ export class DocumentDetailComponent implements OnInit {
   deleteDocument(): void {
     if (!this.document) return;
     
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: {
-        title: 'Delete Document',
-        message: `Are you sure you want to delete "${this.document.title}"? This action cannot be undone.`
-      }
-    });
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${this.document.title}"?\n\nThis action cannot be undone.`
+    );
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result && this.document) {
-        this.documentService.deleteDocument(this.document.id).subscribe({
-          next: () => {
-            this.snackBar.open('Document deleted successfully', 'Close', { duration: 3000 });
-            this.router.navigate(['/documents']);
-          },
-          error: (error) => {
-            console.error('Error deleting document:', error);
-            this.snackBar.open('Failed to delete document', 'Close', { duration: 3000 });
-          }
-        });
-      }
-    });
+    if (confirmed) {
+      this.documentService.deleteDocument(this.document.id).subscribe({
+        next: () => {
+          this.snackBar.open('Document deleted successfully', 'Close', { duration: 3000 });
+          this.router.navigate(['/documents']);
+        },
+        error: (error) => {
+          console.error('Error deleting document:', error);
+          this.snackBar.open('Failed to delete document', 'Close', { duration: 3000 });
+        }
+      });
+    }
   }
 
   canPreview(): boolean {

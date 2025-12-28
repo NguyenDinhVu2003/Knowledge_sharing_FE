@@ -29,7 +29,6 @@ import { DocumentListComponent } from './document-list/document-list.component';
 import { HeaderComponent } from '../../shared/components/header/header.component';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { DocumentCardComponent } from '../../shared/components/document-card/document-card.component';
-import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
 // Directives
 import { DragDropDirective } from '../../shared/directives/drag-drop.directive';
@@ -63,7 +62,6 @@ import { DragDropDirective } from '../../shared/directives/drag-drop.directive';
     HeaderComponent,
     FooterComponent,
     DocumentCardComponent,
-    ConfirmDialogComponent,
     
     // Directives
     DragDropDirective

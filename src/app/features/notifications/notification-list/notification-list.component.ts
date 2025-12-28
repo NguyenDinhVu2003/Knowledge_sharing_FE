@@ -11,14 +11,12 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { FormsModule } from '@angular/forms';
 import { NotificationService } from '../../../core/services/notification.service';
 import { Notification } from '../../../core/models/notification.model';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
-import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { TimeAgoPipe } from '../../../shared/pipes/time-ago.pipe';
 
 @Component({
@@ -37,7 +35,6 @@ import { TimeAgoPipe } from '../../../shared/pipes/time-ago.pipe';
     MatButtonToggleModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
-    MatDialogModule,
     MatSnackBarModule,
     HeaderComponent,
     FooterComponent,
@@ -49,7 +46,6 @@ import { TimeAgoPipe } from '../../../shared/pipes/time-ago.pipe';
 export class NotificationListComponent implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
   private router = inject(Router);
-  private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
 
   notifications$!: Observable<Notification[]>;
@@ -159,60 +155,44 @@ export class NotificationListComponent implements OnInit, OnDestroy {
    * Delete notification with confirmation
    */
   deleteNotification(notification: Notification): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: {
-        title: 'Delete Notification',
-        message: 'Are you sure you want to delete this notification?'
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(confirmed => {
-      if (confirmed) {
-        this.notificationService.deleteNotification(notification.id).subscribe({
-          next: () => {
-            this.snackBar.open('Notification deleted', 'Close', {
-              duration: 2000,
-              horizontalPosition: 'end',
-              verticalPosition: 'top'
-            });
-          },
-          error: (err) => {
-            console.error('Error deleting notification:', err);
-            this.snackBar.open('Failed to delete notification', 'Close', { duration: 3000 });
-          }
-        });
-      }
-    });
+    const confirmed = window.confirm('Are you sure you want to delete this notification?');
+    if (confirmed) {
+      this.notificationService.deleteNotification(notification.id).subscribe({
+        next: () => {
+          this.snackBar.open('Notification deleted', 'Close', {
+            duration: 2000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          });
+        },
+        error: (err) => {
+          console.error('Error deleting notification:', err);
+          this.snackBar.open('Failed to delete notification', 'Close', { duration: 3000 });
+        }
+      });
+    }
   }
 
   /**
    * Clear all notifications with confirmation
    */
   clearAll(): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: {
-        title: 'Clear All Notifications',
-        message: 'Are you sure you want to clear all notifications? This action cannot be undone.'
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(confirmed => {
-      if (confirmed) {
-        this.notificationService.clearAllNotifications().subscribe({
-          next: () => {
-            this.snackBar.open('All notifications cleared', 'Close', {
-              duration: 2000,
-              horizontalPosition: 'end',
-              verticalPosition: 'top'
-            });
-          },
-          error: (err) => {
-            console.error('Error clearing notifications:', err);
-            this.snackBar.open('Failed to clear notifications', 'Close', { duration: 3000 });
-          }
-        });
-      }
-    });
+    const confirmed = window.confirm('Are you sure you want to clear all notifications? This action cannot be undone.');
+    if (confirmed) {
+      this.notificationService.clearAllNotifications().subscribe({
+        next: () => {
+          this.snackBar.open('All notifications cleared', 'Close', {
+            duration: 2000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          });
+        },
+        error: (err) => {
+          console.error('Error clearing notifications:', err);
+          this.snackBar.open('Failed to clear notifications', 'Close', { duration: 3000 });
+        }
+      });
+    }
   }
 
   /**
