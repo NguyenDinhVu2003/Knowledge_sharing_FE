@@ -117,13 +117,17 @@ export class NotificationListComponent implements OnInit, OnDestroy {
   markAsRead(notification: Notification): void {
     if (notification.isRead) {
       // Already read, just navigate
-      this.navigateToDocument(notification.documentId);
+      if (notification.documentId) {
+        this.navigateToDocument(notification.documentId);
+      }
       return;
     }
 
     this.notificationService.markAsRead(notification.id).subscribe({
       next: () => {
-        this.navigateToDocument(notification.documentId);
+        if (notification.documentId) {
+          this.navigateToDocument(notification.documentId);
+        }
       },
       error: (err) => {
         console.error('Error marking as read:', err);

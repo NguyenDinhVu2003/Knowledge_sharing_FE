@@ -58,13 +58,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.favoriteCount$ = this.favoriteService.getFavoriteCount();
     this.unreadNotificationCount$ = this.notificationService.getUnreadCount();
     
-    // Start polling for notifications
-    this.notificationService.startPolling();
+    // CRITICAL: Do NOT call any API here to fetch notification count
+    // This was causing NG0100 errors and 15-20s load times on document detail page
+    // The notification count badge will show 0 initially, and will be updated
+    // only when user visits /notifications page
   }
 
   ngOnDestroy(): void {
-    // Stop polling when component destroyed
-    this.notificationService.stopPolling();
+    // No polling to stop anymore
   }
 
   toggleMobileMenu(): void {

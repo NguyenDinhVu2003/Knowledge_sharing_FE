@@ -1,28 +1,27 @@
-import { Document } from './document.model';
-
+/**
+ * Notification interface - matches Backend API response
+ * Based on API-CONTRACT-NOTIFICATION.md
+ */
 export interface Notification {
   id: number;
-  userId: number;
-  documentId: number;
   message: string;
   isRead: boolean;
-  createdAt: Date;
-  document?: Document; // Optional populated document info
+  documentId: number | null;
+  documentTitle: string | null;
+  createdAt: string; // ISO 8601 date format
 }
 
-export enum NotificationType {
-  NEW_DOCUMENT = 'NEW_DOCUMENT',           // New doc matches user interests
-  DOCUMENT_UPDATE = 'DOCUMENT_UPDATE',      // Favorited doc updated
-  DOCUMENT_RATING = 'DOCUMENT_RATING',      // User's doc was rated
-  DOCUMENT_COMMENT = 'DOCUMENT_COMMENT'     // User's doc received comment (future)
+/**
+ * Response for unread count
+ * GET /api/notifications/unread/count
+ */
+export interface NotificationCountResponse {
+  count: number;
 }
 
-export interface NotificationCreateRequest {
-  user_id: number;
-  document_id: number;
+/**
+ * Generic message response from notification APIs
+ */
+export interface MessageResponse {
   message: string;
-}
-
-export interface NotificationUpdateRequest {
-  is_read: boolean;
 }

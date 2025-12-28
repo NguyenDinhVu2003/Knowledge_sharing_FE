@@ -89,8 +89,8 @@
             <mat-icon inline>access_time</mat-icon>
             {{ notification.createdAt | timeAgo }}
           </span>
-          <span class="document-link" *ngIf="notification.document">
-            Document: {{ notification.document.title }}
+          <span class="document-link" *ngIf="notification.documentTitle">
+            Document: {{ notification.documentTitle }}
           </span>
         </div>
 

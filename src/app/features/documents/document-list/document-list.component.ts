@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -48,6 +48,7 @@ export class DocumentListComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private cdr = inject(ChangeDetectorRef);
 
   showOnlyMyDocuments: boolean = false;
 
@@ -77,16 +78,25 @@ export class DocumentListComponent implements OnInit {
   }
 
   loadDocuments(): void {
+    console.log('=== loadDocuments STARTED, loading:', this.loading);
     this.loading = true;
+    console.log('=== After set loading=true:', this.loading);
+    
     this.documentService.getAllDocuments().subscribe({
       next: (documents) => {
+        console.log('=== Documents received, count:', documents.length);
         this.allDocuments = documents;
         this.applyFilters();
+        console.log('=== BEFORE set loading=false:', this.loading);
         this.loading = false;
+        console.log('=== AFTER set loading=false:', this.loading);
+        this.cdr.detectChanges();
+        console.log('=== After detectChanges, loading:', this.loading);
       },
       error: (err) => {
         console.error('Error loading documents:', err);
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }

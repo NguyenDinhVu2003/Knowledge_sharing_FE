@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -53,6 +53,7 @@ export class DocumentDetailComponent implements OnInit {
   private sanitizer = inject(DomSanitizer);
   private snackBar = inject(MatSnackBar);
   private platformId = inject(PLATFORM_ID);
+  private cdr = inject(ChangeDetectorRef);
 
   document: Document | null = null;
   versions: DocumentVersion[] = [];
@@ -86,7 +87,8 @@ export class DocumentDetailComponent implements OnInit {
         console.log('Document received in component:', doc.title);
         console.log('Setting document and loading = false');
         this.document = doc;
-        this.loading = false;
+        this.loading = false; // Set loading to false
+        this.cdr.detectChanges(); // Force change detection
         console.log('After setting: loading =', this.loading, 'document =', this.document?.title);
         
         // Check if current user is owner
@@ -95,7 +97,7 @@ export class DocumentDetailComponent implements OnInit {
         
         // Load related data
         this.loadVersions(id);
-        this.loadRelatedDocuments(id);
+       // this.loadRelatedDocuments(id);
         this.loadMyRating(id);
         this.loadRatingStats(id);
         
@@ -110,6 +112,7 @@ export class DocumentDetailComponent implements OnInit {
       error: (error) => {
         console.error('Error loading document:', error);
         this.loading = false;
+        this.cdr.detectChanges(); // Force change detection on error too
         this.snackBar.open('Failed to load document', 'Close', { duration: 3000 });
         this.router.navigate(['/documents']);
       }
