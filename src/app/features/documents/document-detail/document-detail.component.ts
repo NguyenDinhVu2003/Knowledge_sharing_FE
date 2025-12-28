@@ -74,10 +74,13 @@ export class DocumentDetailComponent implements OnInit {
   favoriteId: number | null = null;
 
   ngOnInit(): void {
-    const docId = this.route.snapshot.paramMap.get('id');
-    if (docId) {
-      this.loadDocument(parseInt(docId));
-    }
+    // Subscribe to route params to reload when navigating back from edit
+    this.route.params.subscribe(params => {
+      const docId = params['id'];
+      if (docId) {
+        this.loadDocument(parseInt(docId));
+      }
+    });
   }
 
   loadDocument(id: number): void {
@@ -122,7 +125,8 @@ export class DocumentDetailComponent implements OnInit {
     this.versionsLoading = true;
     this.documentService.getDocumentVersions(docId).subscribe({
       next: (versions) => {
-        this.versions = versions;
+        // Only show the latest version
+        this.versions = versions.length > 0 ? [versions[0]] : [];
         this.versionsLoading = false;
       },
       error: (error) => {
