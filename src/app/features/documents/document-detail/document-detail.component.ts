@@ -13,8 +13,10 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Document, DocumentVersion } from '../../../core/models/document.model';
+import { Rating, RatingStats } from '../../../core/models/rating.model';
 import { DocumentService } from '../../../core/services/document.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { RatingService } from '../../../core/services/rating.service';
 import { FavoriteService } from '../../../core/services/favorite.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
@@ -47,6 +49,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
 export class DocumentDetailComponent implements OnInit {
   private documentService = inject(DocumentService);
   private authService = inject(AuthService);
+  private ratingService = inject(RatingService);
   private favoriteService = inject(FavoriteService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -64,6 +67,7 @@ export class DocumentDetailComponent implements OnInit {
   safeFileUrl: SafeResourceUrl | null = null;
   
   userRating = 0;
+  ratingStats: RatingStats | null = null;
   ratingStars = [1, 2, 3, 4, 5];
   isOwner = false;
   isFavorited = false;
@@ -94,6 +98,8 @@ export class DocumentDetailComponent implements OnInit {
         // Load related data
         this.loadVersions(id);
         this.loadRelatedDocuments(id);
+        this.loadMyRating(id);
+        this.loadRatingStats(id);
         
         // Create safe URL for preview
         if (doc.filePath) {
@@ -159,20 +165,58 @@ export class DocumentDetailComponent implements OnInit {
     });
   }
 
+  loadMyRating(docId: number): void {
+    this.ratingService.getMyRating(docId).subscribe({
+      next: (rating) => {
+        this.userRating = rating?.ratingValue || 0;
+      },
+      error: (error) => {
+        console.error('Error loading my rating:', error);
+      }
+    });
+  }
+
+  loadRatingStats(docId: number): void {
+    this.ratingService.getRatingStats(docId).subscribe({
+      next: (stats) => {
+        this.ratingStats = stats;
+      },
+      error: (error) => {
+        console.error('Error loading rating stats:', error);
+      }
+    });
+  }
+
   rateDocument(rating: number): void {
     if (!this.document) return;
     
-    this.userRating = rating;
-    this.documentService.rateDocument(this.document.id, rating).subscribe({
-      next: () => {
-        if (this.document) {
-          this.document.averageRating = rating;
-        }
+    this.ratingService.rateDocument(this.document.id, rating).subscribe({
+      next: (ratingResponse) => {
+        this.userRating = ratingResponse.ratingValue;
         this.snackBar.open(`Rated ${rating} stars`, 'Close', { duration: 2000 });
+        // Reload stats to get updated average
+        this.loadRatingStats(this.document!.id);
       },
       error: (error) => {
         console.error('Error rating document:', error);
         this.snackBar.open('Failed to rate document', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  deleteRating(): void {
+    if (!this.document) return;
+    
+    this.ratingService.deleteRating(this.document.id).subscribe({
+      next: () => {
+        this.userRating = 0;
+        this.snackBar.open('Rating removed', 'Close', { duration: 2000 });
+        // Reload stats
+        this.loadRatingStats(this.document!.id);
+      },
+      error: (error) => {
+        console.error('Error deleting rating:', error);
+        this.snackBar.open('Failed to remove rating', 'Close', { duration: 3000 });
       }
     });
   }

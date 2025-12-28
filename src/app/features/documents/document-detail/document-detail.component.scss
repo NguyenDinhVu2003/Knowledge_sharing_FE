@@ -59,6 +59,11 @@
       }
     }
   }
+  
+  // Add spacing between chips
+  .mat-mdc-chip-set .mdc-evolution-chip-set__chips {
+    gap: 12px;
+  }
 
   .action-buttons {
     display: flex;
@@ -166,6 +171,11 @@ mat-card {
         font-weight: 500;
       }
     }
+  }
+  
+  // Add spacing between tag chips
+  .mat-mdc-chip-set .mdc-evolution-chip-set__chips {
+    gap: 12px;
   }
 }
 

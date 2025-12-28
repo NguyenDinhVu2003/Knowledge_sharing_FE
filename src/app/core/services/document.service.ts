@@ -168,14 +168,7 @@ export class DocumentService {
     );
   }
 
-  rateDocument(docId: number, rating: number): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/${docId}/rate`, { rating }).pipe(
-      catchError(error => {
-        console.error(`Error rating document ${docId}:`, error);
-        return throwError(() => error);
-      })
-    );
-  }
+  // Rating moved to RatingService - use RatingService.rateDocument() instead
 
   getRelatedDocuments(docId: number): Observable<Document[]> {
     return this.http.get<Document[]>(`${this.apiUrl}/${docId}/related`).pipe(
