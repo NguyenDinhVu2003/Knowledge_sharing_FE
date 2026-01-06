@@ -12,6 +12,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 // Services and Models
 import { DocumentService } from '../../../core/services/document.service';
@@ -36,6 +37,7 @@ import { DocumentCardComponent } from '../../../shared/components/document-card/
     MatSelectModule,
     MatPaginatorModule,
     MatIconModule,
+    MatSnackBarModule,
     HeaderComponent,
     FooterComponent,
     DocumentCardComponent
@@ -49,6 +51,7 @@ export class DocumentListComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
+  private snackBar = inject(MatSnackBar);
 
   showOnlyMyDocuments: boolean = false;
 
@@ -66,6 +69,7 @@ export class DocumentListComponent implements OnInit {
   totalDocuments: number = 0;
   
   currentUser$ = this.authService.getCurrentUser$();
+  currentUser = this.authService.getCurrentUser();
   unreadCount$: Observable<number> = new Observable();
   loading: boolean = true;
 
@@ -188,6 +192,40 @@ export class DocumentListComponent implements OnInit {
 
   navigateToDetail(documentId: number): void {
     this.router.navigate(['/documents', documentId]);
+  }
+
+  onActionClicked(event: { action: string; documentId: number }): void {
+    switch (event.action) {
+      case 'view':
+        this.router.navigate(['/documents', event.documentId]);
+        break;
+      case 'edit':
+        this.router.navigate(['/documents', event.documentId, 'edit']);
+        break;
+      case 'delete':
+        this.confirmAndDelete(event.documentId);
+        break;
+    }
+  }
+
+  confirmAndDelete(documentId: number): void {
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this document?\n\nThis action cannot be undone.'
+    );
+
+    if (confirmed) {
+      this.documentService.deleteDocument(documentId).subscribe({
+        next: () => {
+          console.log('Document deleted successfully');
+          // Reload documents
+          this.loadDocuments();
+        },
+        error: (err) => {
+          console.error('Error deleting document:', err);
+          alert('Failed to delete document. Please try again.');
+        }
+      });
+    }
   }
 
   onLogout(): void {

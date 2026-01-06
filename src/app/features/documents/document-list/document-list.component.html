@@ -51,8 +51,10 @@
         @for (doc of displayedDocuments; track doc.id) {
           <app-document-card 
             [document]="doc"
-            [showActions]="false"
-            (cardClicked)="navigateToDetail(doc.id)">
+            [showActions]="true"
+            [currentUserId]="currentUser?.id ?? null"
+            (cardClicked)="navigateToDetail(doc.id)"
+            (actionClicked)="onActionClicked($event)">
           </app-document-card>
         }
       </div>
