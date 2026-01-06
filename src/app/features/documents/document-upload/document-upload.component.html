@@ -192,6 +192,7 @@
                   matInput 
                   [formControl]="tagInput"
                   [matAutocomplete]="auto"
+                  (keydown.enter)="$event.preventDefault(); addCustomTag()"
                   placeholder="Type to search existing tags or add new">
                 <mat-icon matPrefix>search</mat-icon>
                 <mat-autocomplete 
