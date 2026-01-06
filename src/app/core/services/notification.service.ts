@@ -26,13 +26,15 @@ export class NotificationService {
    * GET /api/notifications
    */
   getNotifications(): Observable<Notification[]> {
+    console.log('=== NotificationService: Calling GET', this.apiUrl);
     return this.http.get<Notification[]>(this.apiUrl).pipe(
       tap(notifications => {
+        console.log('=== NotificationService: Received', notifications.length, 'notifications');
         this.notificationsSubject.next(notifications);
         this.updateUnreadCountFromList(notifications);
       }),
       catchError(err => {
-        console.error('Failed to load notifications', err);
+        console.error('=== NotificationService: Failed to load notifications', err);
         return of([]);
       })
     );
@@ -188,6 +190,8 @@ export class NotificationService {
    */
   private updateUnreadCountFromList(notifications: Notification[]): void {
     const unreadCount = notifications.filter(n => !n.isRead).length;
+    console.log('=== NotificationService: Updating unread count:', unreadCount, 'from', notifications.length, 'total notifications');
+    console.log('=== Unread notifications:', notifications.filter(n => !n.isRead).map(n => ({ id: n.id, message: n.message, isRead: n.isRead })));
     this.unreadCountSubject.next(unreadCount);
   }
 }

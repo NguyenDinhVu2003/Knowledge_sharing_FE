@@ -56,7 +56,14 @@ export class NotificationListComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadNotifications();
+    
+    // Subscribe to unread count from service
     this.unreadCount$ = this.notificationService.getUnreadCount();
+    
+    // Debug: Log unread count changes
+    this.unreadCount$.subscribe(count => {
+      console.log('=== NotificationListComponent: Unread count changed to:', count);
+    });
     
     // Start polling for new notifications
     this.notificationService.startPolling();
@@ -71,16 +78,18 @@ export class NotificationListComponent implements OnInit, OnDestroy {
    * Load notifications
    */
   loadNotifications(): void {
+    console.log('=== NotificationListComponent: loadNotifications called');
     this.loading = true;
     this.notifications$ = this.notificationService.getNotifications();
     
     this.notifications$.subscribe({
-      next: () => {
+      next: (notifications) => {
+        console.log('=== NotificationListComponent: Received', notifications.length, 'notifications');
         this.loading = false;
         this.applyFilter();
       },
       error: (err) => {
-        console.error('Error loading notifications:', err);
+        console.error('=== NotificationListComponent: Error loading notifications:', err);
         this.loading = false;
         this.snackBar.open('Failed to load notifications', 'Close', {
           duration: 3000,
