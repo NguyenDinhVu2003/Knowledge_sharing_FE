@@ -1,13 +1,14 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule, FormControl } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -18,6 +19,8 @@ import { Group } from '../../../core/models/document.model';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { DragDropDirective } from '../../../shared/directives/drag-drop.directive';
+import { Observable } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
 
 @Component({
   selector: 'app-document-upload',
@@ -33,6 +36,7 @@ import { DragDropDirective } from '../../../shared/directives/drag-drop.directiv
     MatFormFieldModule,
     MatIconModule,
     MatChipsModule,
+    MatAutocompleteModule,
     MatCardModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
@@ -56,11 +60,12 @@ export class DocumentUploadComponent implements OnInit {
   fileError = '';
   uploading = false;
   generatingSummary = false;
-  generatingTags = false;
   
   availableGroups: Group[] = [];
-  tags: string[] = [];
-  newTag = '';
+  selectedTags: string[] = [];
+  availableTags: string[] = [];
+  filteredTags$!: Observable<string[]>;
+  tagInput = new FormControl('');
 
   sharingLevels = [
     { value: 'PUBLIC', label: 'Public - Everyone can access' },
@@ -78,6 +83,8 @@ export class DocumentUploadComponent implements OnInit {
   ngOnInit(): void {
     this.initForm();
     this.loadGroups();
+    this.loadAvailableTags();
+    this.setupTagFilter();
   }
 
   initForm(): void {
@@ -110,6 +117,37 @@ export class DocumentUploadComponent implements OnInit {
         console.error('Error loading groups:', error);
       }
     });
+  }
+
+  loadAvailableTags(): void {
+    this.documentService.getAllTags().subscribe({
+      next: (tags) => {
+        // Extract tag names from Tag objects
+        this.availableTags = tags.map(tag => typeof tag === 'string' ? tag : tag.name);
+      },
+      error: (error) => {
+        console.error('Error loading tags:', error);
+        this.availableTags = [];
+      }
+    });
+  }
+
+  setupTagFilter(): void {
+    this.filteredTags$ = this.tagInput.valueChanges.pipe(
+      startWith(''),
+      map(value => this._filterTags(value || ''))
+    );
+  }
+
+  private _filterTags(value: string): string[] {
+    const filterValue = value.toLowerCase().trim();
+    if (!filterValue) {
+      return this.availableTags.filter(tag => !this.selectedTags.includes(tag)).slice(0, 10);
+    }
+    return this.availableTags
+      .filter(tag => !this.selectedTags.includes(tag))
+      .filter(tag => tag.toLowerCase().includes(filterValue))
+      .slice(0, 10);
   }
 
   onFileSelected(event: Event): void {
@@ -157,66 +195,59 @@ export class DocumentUploadComponent implements OnInit {
   }
 
   generateSummary(): void {
-    const title = this.uploadForm.get('title')?.value;
-    if (!title) {
-      this.snackBar.open('Please enter a title first', 'Close', { duration: 3000 });
+    if (!this.selectedFile) {
+      this.snackBar.open('Please select a file first', 'Close', { duration: 3000 });
       return;
     }
 
     this.generatingSummary = true;
-    this.documentService.generateSummary(title).subscribe({
-      next: (summary) => {
-        this.uploadForm.patchValue({ summary });
+
+    // Create FormData with file
+    const formData = new FormData();
+    formData.append('file', this.selectedFile);
+
+    this.documentService.generateSummary(formData).subscribe({
+      next: (response) => {
+        this.uploadForm.patchValue({ summary: response.summary });
         this.generatingSummary = false;
-        this.snackBar.open('AI summary generated', 'Close', { duration: 2000 });
+        this.snackBar.open('✨ AI summary generated successfully', 'Close', { duration: 3000 });
       },
       error: (error) => {
         console.error('Error generating summary:', error);
         this.generatingSummary = false;
-        this.snackBar.open('Failed to generate summary', 'Close', { duration: 3000 });
+        let errorMessage = 'Failed to generate AI summary';
+        if (error.error?.message) {
+          errorMessage = error.error.message;
+        }
+        this.snackBar.open(errorMessage, 'Close', { duration: 5000 });
       }
     });
   }
 
-  generateTags(): void {
-    const content = this.uploadForm.get('title')?.value + ' ' + this.uploadForm.get('summary')?.value;
-    if (!content.trim()) {
-      this.snackBar.open('Please enter title and summary first', 'Close', { duration: 3000 });
-      return;
+  selectTag(tag: string): void {
+    const trimmedTag = tag.trim();
+    if (trimmedTag && !this.selectedTags.includes(trimmedTag)) {
+      this.selectedTags.push(trimmedTag);
+      this.tagInput.setValue('');
     }
-
-    this.generatingTags = true;
-    this.documentService.suggestTags(content).subscribe({
-      next: (response) => {
-        // Add only new tags
-        response.tags.forEach((tag: string) => {
-          if (!this.tags.includes(tag)) {
-            this.tags.push(tag);
-          }
-        });
-        this.generatingTags = false;
-        this.snackBar.open('AI tags suggested', 'Close', { duration: 2000 });
-      },
-      error: (error) => {
-        console.error('Error generating tags:', error);
-        this.generatingTags = false;
-        this.snackBar.open('Failed to generate tags', 'Close', { duration: 3000 });
-      }
-    });
   }
 
-  addTag(): void {
-    const tag = this.newTag.trim();
-    if (tag && !this.tags.includes(tag)) {
-      this.tags.push(tag);
-      this.newTag = '';
+  addCustomTag(): void {
+    const tag = this.tagInput.value?.trim();
+    if (tag && !this.selectedTags.includes(tag)) {
+      this.selectedTags.push(tag);
+      // Add to available tags for future use
+      if (!this.availableTags.includes(tag)) {
+        this.availableTags.push(tag);
+      }
+      this.tagInput.setValue('');
     }
   }
 
   removeTag(tag: string): void {
-    const index = this.tags.indexOf(tag);
+    const index = this.selectedTags.indexOf(tag);
     if (index >= 0) {
-      this.tags.splice(index, 1);
+      this.selectedTags.splice(index, 1);
     }
   }
 
@@ -242,7 +273,7 @@ export class DocumentUploadComponent implements OnInit {
       title: this.uploadForm.get('title')?.value,
       summary: this.uploadForm.get('summary')?.value,
       sharingLevel: this.uploadForm.get('sharingLevel')?.value,
-      tags: this.tags
+      tags: this.selectedTags
     };
     
     const formData = new FormData();

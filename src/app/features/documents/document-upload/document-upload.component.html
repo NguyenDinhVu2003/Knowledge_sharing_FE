@@ -132,93 +132,108 @@
             </mat-form-field>
 
             <!-- Summary with AI -->
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Summary</mat-label>
-              <textarea 
-                matInput 
-                formControlName="summary" 
-                placeholder="Enter document summary"
-                rows="5"></textarea>
-              <mat-icon matPrefix>notes</mat-icon>
-              <button 
-                mat-icon-button 
-                matSuffix 
-                type="button"
-                (click)="generateSummary()"
-                [disabled]="generatingSummary || !uploadForm.get('title')?.value"
-                matTooltip="Generate AI Summary">
-                @if (generatingSummary) {
-                  <mat-spinner diameter="20"></mat-spinner>
-                } @else {
-                  <mat-icon>auto_awesome</mat-icon>
-                }
-              </button>
-              @if (uploadForm.get('summary')?.hasError('required') && uploadForm.get('summary')?.touched) {
-                <mat-error>Summary is required</mat-error>
-              }
-              @if (uploadForm.get('summary')?.hasError('minlength')) {
-                <mat-error>Summary must be at least 10 characters</mat-error>
-              }
-              @if (uploadForm.get('summary')?.hasError('maxlength')) {
-                <mat-error>Summary cannot exceed 1000 characters</mat-error>
-              }
-              <mat-hint>Describe what this document is about</mat-hint>
-            </mat-form-field>
-
-            <!-- Tags -->
-            <div class="tags-section">
-              <div class="tags-header">
-                <label>Tags</label>
+            <div class="summary-section">
+              <div class="summary-header">
+                <label class="summary-label">
+                  <mat-icon>notes</mat-icon>
+                  Summary
+                </label>
                 <button 
-                  mat-stroked-button 
-                  color="primary" 
+                  mat-raised-button
+                  class="ai-summary-button"
                   type="button"
-                  (click)="generateTags()"
-                  [disabled]="generatingTags"
-                  class="ai-button">
-                  @if (generatingTags) {
-                    <mat-spinner diameter="16"></mat-spinner>
+                  (click)="generateSummary()"
+                  [disabled]="generatingSummary || !selectedFile"
+                  matTooltip="Let AI analyze your file and generate a professional summary">
+                  @if (generatingSummary) {
+                    <ng-container>
+                      <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
+                      <span>Generating...</span>
+                    </ng-container>
                   } @else {
-                    <mat-icon>auto_awesome</mat-icon>
+                    <ng-container>
+                      <mat-icon class="ai-icon">auto_awesome</mat-icon>
+                      <span>Generate AI Summary</span>
+                    </ng-container>
                   }
-                  AI Suggest
                 </button>
               </div>
+              
+              <mat-form-field appearance="outline" class="full-width">
+                <textarea 
+                  matInput 
+                  formControlName="summary" 
+                  placeholder="Describe what this document is about, or let AI generate it for you"
+                  rows="6"></textarea>
+                @if (uploadForm.get('summary')?.hasError('required') && uploadForm.get('summary')?.touched) {
+                  <mat-error>Summary is required</mat-error>
+                }
+                @if (uploadForm.get('summary')?.hasError('minlength')) {
+                  <mat-error>Summary must be at least 10 characters</mat-error>
+                }
+                @if (uploadForm.get('summary')?.hasError('maxlength')) {
+                  <mat-error>Summary cannot exceed 1000 characters</mat-error>
+                }
+                <mat-hint>✨ AI can extract and summarize content from your file automatically</mat-hint>
+              </mat-form-field>
+            </div>
 
-              <div class="tag-input-group">
-                <mat-form-field appearance="outline" class="tag-input">
-                  <mat-label>Add Tag</mat-label>
-                  <input 
-                    matInput 
-                    [(ngModel)]="newTag" 
-                    [ngModelOptions]="{standalone: true}"
-                    (keyup.enter)="addTag()"
-                    placeholder="Enter tag name">
-                  <mat-icon matPrefix>label</mat-icon>
-                </mat-form-field>
-                <button 
-                  mat-raised-button 
-                  color="primary" 
-                  type="button"
-                  (click)="addTag()"
-                  [disabled]="!newTag.trim()">
-                  Add
-                </button>
-              </div>
+            <!-- Tags with Autocomplete -->
+            <div class="tags-section">
+              <label class="tags-label">
+                <mat-icon>label</mat-icon>
+                Tags
+              </label>
 
-              @if (tags.length > 0) {
-                <mat-chip-listbox class="tags-list">
-                  @for (tag of tags; track tag) {
-                    <mat-chip (removed)="removeTag(tag)">
+              <mat-form-field appearance="outline" class="full-width tag-autocomplete">
+                <mat-label>Select or add tags</mat-label>
+                <input 
+                  type="text"
+                  matInput 
+                  [formControl]="tagInput"
+                  [matAutocomplete]="auto"
+                  placeholder="Type to search existing tags or add new">
+                <mat-icon matPrefix>search</mat-icon>
+                <mat-autocomplete 
+                  #auto="matAutocomplete"
+                  (optionSelected)="selectTag($event.option.value)">
+                  @for (tag of filteredTags$ | async; track tag) {
+                    <mat-option [value]="tag">
+                      <mat-icon>label</mat-icon>
                       {{ tag }}
-                      <button matChipRemove>
-                        <mat-icon>cancel</mat-icon>
-                      </button>
-                    </mat-chip>
+                    </mat-option>
                   }
-                </mat-chip-listbox>
+                </mat-autocomplete>
+                <button 
+                  mat-icon-button 
+                  matSuffix
+                  type="button"
+                  (click)="addCustomTag()"
+                  [disabled]="!tagInput.value?.trim()"
+                  matTooltip="Add custom tag">
+                  <mat-icon>add_circle</mat-icon>
+                </button>
+                <mat-hint>Choose from existing tags or create new ones</mat-hint>
+              </mat-form-field>
+
+              @if (selectedTags.length > 0) {
+                <div class="selected-tags">
+                  <mat-chip-listbox>
+                    @for (tag of selectedTags; track tag) {
+                      <mat-chip (removed)="removeTag(tag)">
+                        {{ tag }}
+                        <button matChipRemove>
+                          <mat-icon>cancel</mat-icon>
+                        </button>
+                      </mat-chip>
+                    }
+                  </mat-chip-listbox>
+                </div>
               } @else {
-                <p class="no-tags">No tags added yet. Use AI to suggest relevant tags.</p>
+                <p class="no-tags">
+                  <mat-icon>info</mat-icon>
+                  No tags selected. Start typing to find existing tags or create new ones.
+                </p>
               }
             </div>
           </mat-card-content>

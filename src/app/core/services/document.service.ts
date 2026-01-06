@@ -179,8 +179,8 @@ export class DocumentService {
     );
   }
 
-  generateSummary(content: string): Observable<{ summary: string }> {
-    return this.http.post<{ summary: string }>(`/ai/summary`, { content }).pipe(
+  generateSummary(formData: FormData): Observable<{ summary: string }> {
+    return this.http.post<{ summary: string }>(`${this.apiUrl}/preview-summary`, formData).pipe(
       catchError(error => {
         console.error('Error generating summary:', error);
         return throwError(() => error);
@@ -201,6 +201,15 @@ export class DocumentService {
     return this.http.get<Group[]>(`${environment.apiUrl}/groups`).pipe(
       catchError(error => {
         console.error('Error fetching groups:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  getAllTags(): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/tags`).pipe(
+      catchError(error => {
+        console.error('Error fetching tags:', error);
         return throwError(() => error);
       })
     );
