@@ -69,6 +69,12 @@ export class DocumentDetailComponent implements OnInit {
   isOwner = false;
   isFavorited = false;
 
+  // Preview flags - computed once to avoid NG0100 error
+  canPreviewFile = false;
+  isImageFile = false;
+  isPdfFile = false;
+  isOfficeFile = false; // DOC, DOCX, XLS, XLSX, PPT, PPTX
+
   ngOnInit(): void {
     // Subscribe to route params to reload when navigating back from edit
     this.route.params.subscribe(params => {
@@ -87,8 +93,17 @@ export class DocumentDetailComponent implements OnInit {
         console.log('Document received in component:', doc.title);
         console.log('Setting document and loading = false');
         this.document = doc;
-        this.loading = false; // Set loading to false
-        this.cdr.detectChanges(); // Force change detection
+        
+        // Update preview flags FIRST
+        this.updatePreviewFlags();
+        
+        // Create safe URL BEFORE detectChanges
+        if (doc.filePath) {
+          this.createSafeUrl(doc.filePath);
+        }
+        
+        this.loading = false;
+        this.cdr.detectChanges();
         console.log('After setting: loading =', this.loading, 'document =', this.document?.title);
         
         // Check if current user is owner
@@ -101,12 +116,7 @@ export class DocumentDetailComponent implements OnInit {
         this.loadMyRating(id);
         this.loadRatingStats(id);
         
-        // Create safe URL for preview
-        if (doc.filePath) {
-          this.createSafeUrl(doc.filePath);
-        }
-        
-        // Check if favorited (mock - would check against user's favorites)
+        // Check if favorited
         this.checkFavoriteStatus(id);
       },
       error: (error) => {
@@ -149,8 +159,78 @@ export class DocumentDetailComponent implements OnInit {
   }
 
   createSafeUrl(filePath: string): void {
+    console.log('=== createSafeUrl called with:', filePath);
+    
+    // If filePath is relative, convert to absolute URL
+    let fullUrl = filePath;
+    if (filePath && !filePath.startsWith('http')) {
+      // Ensure filePath starts with /
+      const normalizedPath = filePath.startsWith('/') ? filePath : `/${filePath}`;
+      // Assume files are served from backend
+      fullUrl = `http://localhost:8090${normalizedPath}`;
+      console.log('=== Converted relative path to:', fullUrl);
+    }
+    
+    // For Office files, use Microsoft Office Online Viewer
+    if (this.isOfficeFile) {
+      // Encode the file URL for Office viewer
+      const encodedUrl = encodeURIComponent(fullUrl);
+      fullUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}`;
+      console.log('=== Using Office viewer:', fullUrl);
+    }
+    
     // For preview, sanitize the URL
-    this.safeFileUrl = this.sanitizer.bypassSecurityTrustResourceUrl(filePath);
+    this.safeFileUrl = this.sanitizer.bypassSecurityTrustResourceUrl(fullUrl);
+    console.log('=== safeFileUrl created');
+  }
+
+  /**
+   * Update preview flags based on current document
+   * Called once when document is loaded to avoid NG0100 error
+   */
+  private updatePreviewFlags(): void {
+    if (!this.document) {
+      this.canPreviewFile = false;
+      this.isImageFile = false;
+      this.isPdfFile = false;
+      this.isOfficeFile = false;
+      console.log('=== updatePreviewFlags: No document');
+      return;
+    }
+
+    // Use fileType from backend first, then fallback to extension detection
+    const fileType = this.document.fileType?.toUpperCase();
+    let ext = '';
+    
+    if (this.document.filePath) {
+      const parts = this.document.filePath.split('.');
+      ext = parts.length > 1 ? parts[parts.length - 1].toLowerCase() : '';
+    }
+    
+    console.log('=== updatePreviewFlags:', {
+      fileType: fileType,
+      filePath: this.document.filePath,
+      extension: ext
+    });
+    
+    // Check if it's an image
+    this.isImageFile = fileType === 'IMAGE' || 
+                       ['png', 'jpg', 'jpeg', 'gif', 'svg', 'bmp', 'webp'].includes(ext);
+    
+    // Check if it's a PDF
+    this.isPdfFile = fileType === 'PDF' || ext === 'pdf';
+    
+    // Check if it's an Office file (DOC, DOCX, XLS, XLSX, PPT, PPTX)
+    this.isOfficeFile = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext);
+    
+    this.canPreviewFile = this.isImageFile || this.isPdfFile || this.isOfficeFile;
+    
+    console.log('=== Preview flags updated:', {
+      canPreviewFile: this.canPreviewFile,
+      isImageFile: this.isImageFile,
+      isPdfFile: this.isPdfFile,
+      isOfficeFile: this.isOfficeFile
+    });
   }
 
   checkFavoriteStatus(docId: number): void {
@@ -270,13 +350,28 @@ export class DocumentDetailComponent implements OnInit {
   }
 
   downloadDocument(): void {
-    if (!this.document) return;
+    if (!this.document || !this.document.filePath) return;
     
-    // Mock implementation - would trigger actual download in real app
+    // Build download URL
+    const normalizedPath = this.document.filePath.startsWith('/') 
+      ? this.document.filePath 
+      : `/${this.document.filePath}`;
+    const downloadUrl = `http://localhost:8090${normalizedPath}`;
+    
+    console.log('=== Downloading file from:', downloadUrl);
+    
+    // Create temporary anchor element to trigger download
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = this.document.fileName || this.document.title || 'download';
+    link.target = '_blank';
+    
+    // Trigger click
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
     this.snackBar.open('Download started...', 'Close', { duration: 2000 });
-    
-    // In real app, would use:
-    // window.open(this.document.file_path, '_blank');
   }
 
   editDocument(): void {
@@ -306,24 +401,6 @@ export class DocumentDetailComponent implements OnInit {
     }
   }
 
-  canPreview(): boolean {
-    if (!this.document || !this.document.filePath) return false;
-    const ext = this.document.filePath.split('.').pop()?.toLowerCase();
-    return ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'svg'].includes(ext || '');
-  }
-
-  isImage(): boolean {
-    if (!this.document || !this.document.filePath) return false;
-    const ext = this.document.filePath.split('.').pop()?.toLowerCase();
-    return ['png', 'jpg', 'jpeg', 'gif', 'svg'].includes(ext || '');
-  }
-
-  isPdf(): boolean {
-    if (!this.document || !this.document.filePath) return false;
-    const ext = this.document.filePath.split('.').pop()?.toLowerCase();
-    return ext === 'pdf';
-  }
-
   formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -335,5 +412,15 @@ export class DocumentDetailComponent implements OnInit {
   formatDate(date: Date | string): string {
     const d = typeof date === 'string' ? new Date(date) : date;
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  onImageError(event: Event): void {
+    console.error('=== Image failed to load:', event);
+    const img = event.target as HTMLImageElement;
+    console.error('=== Image src was:', img.src);
+  }
+
+  onImageLoad(): void {
+    console.log('=== Image loaded successfully!');
   }
 }

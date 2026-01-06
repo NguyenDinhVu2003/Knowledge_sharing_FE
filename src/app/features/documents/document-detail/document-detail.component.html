@@ -68,16 +68,34 @@
       <!-- Left Column: Preview & Description -->
       <div class="main-content">
         <!-- Preview Section -->
-        @if (canPreview()) {
+        @if (canPreviewFile) {
           <mat-card class="preview-card">
             <mat-card-header>
               <mat-card-title>Preview</mat-card-title>
             </mat-card-header>
             <mat-card-content>
-              @if (isImage()) {
-                <img [src]="document.filePath" [alt]="document.title" class="preview-image">
-              } @else if (isPdf()) {
+              @if (isImageFile && safeFileUrl) {
+                <img [src]="safeFileUrl" 
+                     [alt]="document.title" 
+                     class="preview-image"
+                     (error)="onImageError($event)"
+                     (load)="onImageLoad()">
+              } @else if (isPdfFile && safeFileUrl) {
                 <iframe [src]="safeFileUrl" class="preview-iframe"></iframe>
+              } @else if (isOfficeFile) {
+                <div class="office-preview-notice">
+                  <mat-icon>description</mat-icon>
+                  <h3>Office Document Preview</h3>
+                  <p>Preview for Office documents (DOC, DOCX, XLS, XLSX, PPT, PPTX) is not available in development mode.</p>
+                  <p>Please download the file to view its contents.</p>
+                  <button mat-raised-button color="primary" (click)="downloadDocument()">
+                    <mat-icon>download</mat-icon>
+                    Download to View
+                  </button>
+                </div>
+              }
+              @if (!safeFileUrl && !isOfficeFile) {
+                <p style="padding: 20px; color: red;">Error: safeFileUrl is not set</p>
               }
             </mat-card-content>
           </mat-card>
