@@ -72,6 +72,32 @@
   }
 }
 
+.view-all-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+  padding-top: 16px;
+
+  .view-all-button {
+    min-width: 200px;
+    height: 44px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    mat-icon {
+      margin-left: 8px;
+      transition: transform 0.3s ease;
+    }
+
+    &:hover {
+      mat-icon {
+        transform: translateX(4px);
+      }
+    }
+  }
+}
+
 .empty-state {
   text-align: center;
   padding: 48px 24px;

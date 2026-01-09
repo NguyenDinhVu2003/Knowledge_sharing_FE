@@ -26,6 +26,16 @@
             </app-document-card>
           }
         </div>
+        <div class="view-all-container">
+          <button 
+            mat-stroked-button 
+            color="primary" 
+            (click)="viewAllRecentDocuments()"
+            class="view-all-button">
+            View All Documents
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </div>
       } @else {
         <p class="empty-state">No documents yet.</p>
       }
@@ -54,6 +64,16 @@
               (actionClicked)="onActionClicked($event)">
             </app-document-card>
           }
+        </div>
+        <div class="view-all-container">
+          <button 
+            mat-stroked-button 
+            color="primary" 
+            (click)="viewAllPopularDocuments()"
+            class="view-all-button">
+            View All Documents
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
         </div>
       } @else {
         <p class="empty-state">No popular documents yet.</p>

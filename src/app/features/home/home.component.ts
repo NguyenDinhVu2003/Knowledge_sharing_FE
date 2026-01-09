@@ -5,6 +5,7 @@ import { Observable, of } from 'rxjs';
 
 // Material Modules
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 // Core Services and Models
@@ -24,6 +25,7 @@ import { DocumentCardComponent } from '../../shared/components/document-card/doc
     CommonModule,
     RouterModule,
     MatButtonModule,
+    MatIconModule,
     MatSnackBarModule,
     HeaderComponent,
     FooterComponent,
@@ -56,14 +58,14 @@ export class HomeComponent implements OnInit {
     // Race condition could cause getCurrentUser() to return null before localStorage loads
 
     // Load documents from backend API
-    // GET /api/documents?sort=recent&limit=10
-    this.recentDocuments$ = this.documentService.getRecentDocuments(10);
+    // GET /api/documents?sort=recent&limit=9
+    this.recentDocuments$ = this.documentService.getRecentDocuments(9);
     
-    // GET /api/documents?sort=popular&limit=10
-    this.popularDocuments$ = this.documentService.getPopularDocuments(10);
+    // GET /api/documents?sort=popular&limit=9
+    this.popularDocuments$ = this.documentService.getPopularDocuments(9);
     
-    // GET /api/documents?owner=me
-    this.userDocuments$ = this.documentService.getUserDocuments();
+    // GET /api/documents?owner=me&limit=9
+    this.userDocuments$ = this.documentService.getUserDocuments(9);
   }
 
   /**
@@ -106,9 +108,9 @@ export class HomeComponent implements OnInit {
             verticalPosition: 'top'
           });
           // Reload all document lists
-          this.recentDocuments$ = this.documentService.getRecentDocuments(5);
-          this.popularDocuments$ = this.documentService.getPopularDocuments(5);
-          this.userDocuments$ = this.documentService.getUserDocuments(5);
+          this.recentDocuments$ = this.documentService.getRecentDocuments(9);
+          this.popularDocuments$ = this.documentService.getPopularDocuments(9);
+          this.userDocuments$ = this.documentService.getUserDocuments(9);
         },
         error: (err) => {
           console.error('Error deleting document:', err);
@@ -127,5 +129,23 @@ export class HomeComponent implements OnInit {
    */
   onLogout(): void {
     this.authService.logout().subscribe();
+  }
+
+  /**
+   * Navigate to documents page with recent sort
+   */
+  viewAllRecentDocuments(): void {
+    this.router.navigate(['/documents'], { 
+      queryParams: { sort: 'recent' } 
+    });
+  }
+
+  /**
+   * Navigate to documents page with popular sort (by rating)
+   */
+  viewAllPopularDocuments(): void {
+    this.router.navigate(['/documents'], { 
+      queryParams: { sort: 'popular' } 
+    });
   }
 }

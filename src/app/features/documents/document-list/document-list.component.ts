@@ -74,6 +74,13 @@ export class DocumentListComponent implements OnInit {
   loading: boolean = true;
 
   ngOnInit(): void {
+    // Đọc query params để set sort mặc định
+    this.route.queryParams.subscribe(params => {
+      if (params['sort']) {
+        this.sortBy = params['sort'];
+      }
+    });
+    
     // Kiểm tra xem có phải đang xem My Documents không
     this.route.data.subscribe(data => {
       this.showOnlyMyDocuments = data['myDocuments'] === true;
