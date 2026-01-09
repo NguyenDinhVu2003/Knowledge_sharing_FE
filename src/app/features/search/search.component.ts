@@ -174,16 +174,55 @@ export class SearchComponent implements OnInit {
     console.log('🔍 performSearch called, query:', query);
     console.log('📋 Form values:', this.searchForm.value);
 
-    // Allow search with filters even without query
-    // if (!query || query.length < 2) {
-    //   return;
-    // }
+    // Allow search with filters even without query for keyword search
+    // For semantic search, query is required
+    if (this.isSemanticSearch && (!query || query.length < 2)) {
+      this.snackBar.open('Please enter a search query for AI Semantic Search', 'Close', { duration: 3000 });
+      return;
+    }
 
     this.searching = true;
     this.lastSearchQuery = query || '';
     this.searchPerformed = true;
 
-    // Perform unified search with all filters
+    // Use Semantic Search if selected
+    if (this.isSemanticSearch && query) {
+      console.log('🤖 Performing AI Semantic Search...');
+      this.searchService.semanticSearch(query, 50).subscribe({
+        next: (documents) => {
+          console.log('✅ Semantic search response:', documents);
+          // Convert to SearchResponse format for consistent UI
+          this.searchResults = {
+            documents: documents,
+            currentPage: 0,
+            totalPages: 1,
+            totalElements: documents.length,
+            pageSize: documents.length,
+            tagFacets: null,
+            fileTypeFacets: null,
+            sharingLevelFacets: null,
+            ownerFacets: null,
+            query: query,
+            searchTimeMs: 0
+          };
+          this.searching = false;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          console.error('❌ Semantic search failed:', err);
+          this.snackBar.open(
+            err.error?.message || 'AI Semantic Search failed. Please try again.',
+            'Close',
+            { duration: 5000 }
+          );
+          this.searching = false;
+          this.cdr.markForCheck();
+        }
+      });
+      return;
+    }
+
+    // Perform unified keyword search with all filters
     const searchRequest: SearchRequest = {
       filters: {
         q: query || undefined,

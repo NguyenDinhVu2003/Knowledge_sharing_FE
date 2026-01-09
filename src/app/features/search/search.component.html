@@ -161,19 +161,26 @@
 
     <!-- Results Grid -->
     <div *ngIf="!searching && searchResults.documents.length > 0" class="results-grid">
-      <app-document-card 
-        *ngFor="let doc of searchResults.documents; trackBy: trackByDocId"
-        [document]="doc"
-        [showActions]="true"
-        [currentUserId]="currentUserId"
-        (cardClicked)="navigateToDocument($event)"
-        (actionClicked)="onActionClicked($event)">
-      </app-document-card>
+      <div *ngFor="let doc of searchResults.documents; trackBy: trackByDocId" class="result-item">
+        <!-- Semantic Score Badge (only for AI search) -->
+        <div *ngIf="isSemanticSearch && doc.semanticScore" class="semantic-score-badge">
+          <mat-icon>psychology</mat-icon>
+          <span>{{ (doc.semanticScore * 100).toFixed(0) }}% match</span>
+        </div>
+        
+        <app-document-card 
+          [document]="doc"
+          [showActions]="true"
+          [currentUserId]="currentUserId"
+          (cardClicked)="navigateToDocument($event)"
+          (actionClicked)="onActionClicked($event)">
+        </app-document-card>
+      </div>
     </div>
 
-    <!-- Pagination -->
+    <!-- Pagination (only for keyword search) -->
     <mat-paginator 
-      *ngIf="!searching && searchResults.totalElements > 0"
+      *ngIf="!searching && searchResults.totalElements > 0 && !isSemanticSearch"
       [length]="searchResults.totalElements"
       [pageSize]="pageSize"
       [pageIndex]="searchResults.currentPage"
@@ -181,6 +188,14 @@
       (page)="onPageChange($event)"
       showFirstLastButtons>
     </mat-paginator>
+
+    <!-- Semantic Search Note -->
+    <div *ngIf="!searching && searchResults.totalElements > 0 && isSemanticSearch" 
+         class="semantic-note">
+      <mat-icon>info</mat-icon>
+      <p>AI Semantic Search shows all relevant results sorted by similarity score. 
+         Results are limited to top 50 matches.</p>
+    </div>
   </div>
 
   <!-- Search Tips (initial state) -->

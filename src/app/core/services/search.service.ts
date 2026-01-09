@@ -139,4 +139,22 @@ export class SearchService {
       })
     );
   }
+
+  /**
+   * Perform AI Semantic Search
+   * GET /api/search/semantic?q=...&limit=...
+   * Uses Gemini AI for natural language understanding and concept-based search
+   */
+  semanticSearch(query: string, limit: number = 10): Observable<Document[]> {
+    let params = new HttpParams()
+      .set('q', query)
+      .set('limit', limit.toString());
+    
+    return this.http.get<Document[]>(`${this.apiUrl}/semantic`, { params }).pipe(
+      catchError(error => {
+        console.error('Semantic search error:', error);
+        throw error;
+      })
+    );
+  }
 }

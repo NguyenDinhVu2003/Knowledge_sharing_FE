@@ -51,6 +51,7 @@ export interface DocumentModel {
   updatedAt: string;
   tags: string[];
   groupIds: number[];
+  semanticScore?: number; // AI similarity score (0.0-1.0) - only for semantic search results
 }
 
 /**
