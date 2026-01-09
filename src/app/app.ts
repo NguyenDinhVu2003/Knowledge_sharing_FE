@@ -25,9 +25,8 @@ export class App implements OnInit {
       this.showHeader.set(!event.url.includes('/auth/'));
     });
 
-    // Check authentication on app start
-    if (!this.authService.isAuthenticated() && !this.router.url.includes('/auth')) {
-      this.router.navigate(['/auth/login']);
-    }
+    // Don't check authentication here - let the guards handle it
+    // This prevents race conditions when refreshing the page
+    // Guards will check authentication before allowing access to protected routes
   }
 }

@@ -10,14 +10,24 @@ export const authGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
+  // Check if token exists in localStorage
+  const token = authService.getToken();
   const isAuth = authService.isAuthenticated();
   
-  if (isAuth) {
+  console.log('[AuthGuard] ========================================');
+  console.log('[AuthGuard] Checking authentication for:', state.url);
+  console.log('[AuthGuard] Token exists:', !!token);
+  console.log('[AuthGuard] isAuthenticated Result:', isAuth);
+  console.log('[AuthGuard] ========================================');
+  
+  if (isAuth && token) {
     return true;
   }
 
   // Store the attempted URL for redirecting after login
   const returnUrl = state.url;
+  
+  console.log('[AuthGuard] ❌ NOT authenticated, redirecting to login with returnUrl:', returnUrl);
   
   // Redirect to login page with return URL
   router.navigate(['/auth/login'], { 

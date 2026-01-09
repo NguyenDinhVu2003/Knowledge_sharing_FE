@@ -51,11 +51,9 @@ export class HomeComponent implements OnInit {
     this.currentUser = this.authService.getCurrentUser();
     this.currentUser$ = of(this.currentUser);
     
-    // If not authenticated, redirect to login
-    if (!this.currentUser) {
-      this.router.navigate(['/auth/login']);
-      return;
-    }
+    // Don't check authentication here - the guard already did it
+    // This component is protected by authGuard, so if we're here, we're authenticated
+    // Race condition could cause getCurrentUser() to return null before localStorage loads
 
     // Load documents from backend API
     // GET /api/documents?sort=recent&limit=10

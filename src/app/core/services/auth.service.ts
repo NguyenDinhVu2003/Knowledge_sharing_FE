@@ -23,8 +23,22 @@ export class AuthService {
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor() {
+    console.log('[AuthService] Constructor - isBrowser:', this.isBrowser);
     // Initialize user state from storage on service creation
-    this.currentUserSubject.next(this.getUserFromStorage());
+    if (this.isBrowser) {
+      const user = this.getUserFromStorage();
+      const token = this.getToken();
+      console.log('[AuthService] Constructor - User from storage:', user ? 'User exists' : 'No user');
+      console.log('[AuthService] Constructor - Token from storage:', token ? 'Token exists' : 'No token');
+      if (user && token) {
+        this.currentUserSubject.next(user);
+      } else if (token && !user) {
+        // If we have token but no user, fetch user from API
+        this.getCurrentUserFromAPI().subscribe({
+          error: (err) => console.error('[AuthService] Failed to fetch user on init:', err)
+        });
+      }
+    }
   }
 
   /**
@@ -149,29 +163,36 @@ export class AuthService {
 
   /**
    * Checks if user is authenticated
-   * @returns true if token exists and is valid, false otherwise
+   * @returns true if token exists, false otherwise (even if expired - let backend validate)
    */
   isAuthenticated(): boolean {
-    if (!this.isBrowser) {
+    // Force browser check - in browser environment, always try to read from localStorage
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+      console.log('[AuthService] isAuthenticated - No window or localStorage available');
       return false;
     }
     
-    const token = this.getToken();
+    // Read token directly from localStorage to avoid any caching issues
+    const token = localStorage.getItem(this.TOKEN_KEY);
+    
+    console.log('[AuthService] isAuthenticated - Token exists:', !!token);
     
     if (!token) {
+      console.log('[AuthService] No token found in localStorage');
       return false;
     }
     
-    // Check if token is expired
+    // Check if token is expired for logging purposes only
     const isExpired = this.isTokenExpired(token);
-    
     if (isExpired) {
-      // Token is expired, clear auth data
-      this.clearAuthData();
-      return false;
+      console.warn('[AuthService] Token is expired but keeping user logged in. Backend will validate.');
+    } else {
+      console.log('[AuthService] Token is valid');
     }
     
-    // Token is valid
+    // Just check if token exists, don't clear auth data even if expired
+    // Let the backend validate the token and return 401 if expired
+    // The interceptor will handle 401 and redirect to login
     return true;
   }
 
@@ -181,9 +202,12 @@ export class AuthService {
    */
   getToken(): string | null {
     if (!this.isBrowser) {
+      console.log('[AuthService] Not in browser, returning null token');
       return null;
     }
-    return localStorage.getItem(this.TOKEN_KEY);
+    const token = localStorage.getItem(this.TOKEN_KEY);
+    console.log('[AuthService] Getting token from localStorage:', token ? 'Token exists' : 'No token found');
+    return token;
   }
 
   /**
@@ -217,6 +241,7 @@ export class AuthService {
   private setToken(token: string): void {
     if (this.isBrowser) {
       localStorage.setItem(this.TOKEN_KEY, token);
+      console.log('[AuthService] Token saved to localStorage');
     }
   }
 
@@ -228,22 +253,26 @@ export class AuthService {
 
   private getUserFromStorage(): User | null {
     if (!this.isBrowser) {
+      console.log('[AuthService] getUserFromStorage - Not in browser context');
       return null;
     }
     const userJson = localStorage.getItem(this.USER_KEY);
+    console.log('[AuthService] getUserFromStorage - userJson:', userJson ? 'exists' : 'null');
     if (userJson && userJson !== 'undefined' && userJson !== 'null') {
       try {
         const parsed = JSON.parse(userJson);
         // Validate that parsed object has required properties
         if (parsed && typeof parsed === 'object' && parsed.id !== undefined) {
+          console.log('[AuthService] getUserFromStorage - Valid user found');
           return parsed as User;
         }
       } catch (error) {
-        console.error('Error parsing user data:', error);
+        console.error('[AuthService] Error parsing user data:', error);
         // Clear invalid data
         localStorage.removeItem(this.USER_KEY);
       }
     }
+    console.log('[AuthService] getUserFromStorage - No valid user found');
     return null;
   }
 
@@ -251,6 +280,7 @@ export class AuthService {
     if (this.isBrowser) {
       localStorage.removeItem(this.TOKEN_KEY);
       localStorage.removeItem(this.USER_KEY);
+      console.log('[AuthService] Auth data cleared from localStorage');
     }
     this.currentUserSubject.next(null);
   }
