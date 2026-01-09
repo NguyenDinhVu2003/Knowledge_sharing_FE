@@ -112,7 +112,7 @@ export class DocumentDetailComponent implements OnInit {
         
         // Load related data
         this.loadVersions(id);
-       // this.loadRelatedDocuments(id);
+        this.loadRelatedDocuments(id);
         this.loadMyRating(id);
         this.loadRatingStats(id);
         
@@ -145,15 +145,24 @@ export class DocumentDetailComponent implements OnInit {
   }
 
   loadRelatedDocuments(docId: number): void {
+    console.log('🔍 Loading related documents for docId:', docId);
     this.relatedLoading = true;
-    this.documentService.getRelatedDocuments(docId).subscribe({
+    this.documentService.getRelatedDocuments(docId, 5).subscribe({
       next: (docs) => {
+        console.log('✅ Related documents API response:', docs);
+        console.log('✅ Number of related documents:', docs.length);
         this.relatedDocuments = docs;
         this.relatedLoading = false;
+        
+        // Force change detection
+        this.cdr.detectChanges();
+        console.log('✅ relatedDocuments array updated:', this.relatedDocuments);
       },
       error: (error) => {
-        console.error('Error loading related documents:', error);
+        console.error('❌ Error loading related documents:', error);
+        this.relatedDocuments = [];
         this.relatedLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -412,6 +421,13 @@ export class DocumentDetailComponent implements OnInit {
   formatDate(date: Date | string): string {
     const d = typeof date === 'string' ? new Date(date) : date;
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  /**
+   * Navigate to another document
+   */
+  navigateToDocument(documentId: number): void {
+    this.router.navigate(['/documents', documentId]);
   }
 
   onImageError(event: Event): void {

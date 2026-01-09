@@ -232,11 +232,17 @@
             @if (relatedLoading) {
               <div class="loading-small">
                 <mat-spinner diameter="30"></mat-spinner>
+                <p>Loading related documents...</p>
               </div>
-            } @else if (relatedDocuments.length > 0) {
+            } @else if (relatedDocuments && relatedDocuments.length > 0) {
               <div class="related-docs">
                 @for (relatedDoc of relatedDocuments; track relatedDoc.id) {
-                  <app-document-card [document]="relatedDoc"></app-document-card>
+                  <div class="related-doc-item" (click)="navigateToDocument(relatedDoc.id)">
+                    <app-document-card 
+                      [document]="relatedDoc"
+                      [showActions]="false">
+                    </app-document-card>
+                  </div>
                 }
               </div>
             } @else {

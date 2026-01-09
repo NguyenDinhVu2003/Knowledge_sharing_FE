@@ -170,8 +170,9 @@ export class DocumentService {
 
   // Rating moved to RatingService - use RatingService.rateDocument() instead
 
-  getRelatedDocuments(docId: number): Observable<Document[]> {
-    return this.http.get<Document[]>(`${this.apiUrl}/${docId}/related`).pipe(
+  getRelatedDocuments(docId: number, limit: number = 5): Observable<Document[]> {
+    const params = new HttpParams().set('limit', limit.toString());
+    return this.http.get<Document[]>(`${this.apiUrl}/${docId}/related`, { params }).pipe(
       catchError(error => {
         console.error(`Error fetching related documents for ${docId}:`, error);
         return throwError(() => error);
