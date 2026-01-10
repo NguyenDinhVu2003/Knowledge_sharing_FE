@@ -58,14 +58,14 @@ export class HomeComponent implements OnInit {
     // Race condition could cause getCurrentUser() to return null before localStorage loads
 
     // Load documents from backend API
-    // GET /api/documents?sort=recent&limit=9
-    this.recentDocuments$ = this.documentService.getRecentDocuments(9);
+    // GET /api/documents?sort=recent&limit=6
+    this.recentDocuments$ = this.documentService.getRecentDocuments(6);
     
-    // GET /api/documents?sort=popular&limit=9
-    this.popularDocuments$ = this.documentService.getPopularDocuments(9);
+    // GET /api/documents?sort=popular&limit=6
+    this.popularDocuments$ = this.documentService.getPopularDocuments(6);
     
-    // GET /api/documents?owner=me&limit=9
-    this.userDocuments$ = this.documentService.getUserDocuments(9);
+    // GET /api/documents?owner=me&limit=6
+    this.userDocuments$ = this.documentService.getUserDocuments(6);
   }
 
   /**
@@ -108,9 +108,9 @@ export class HomeComponent implements OnInit {
             verticalPosition: 'top'
           });
           // Reload all document lists
-          this.recentDocuments$ = this.documentService.getRecentDocuments(9);
-          this.popularDocuments$ = this.documentService.getPopularDocuments(9);
-          this.userDocuments$ = this.documentService.getUserDocuments(9);
+          this.recentDocuments$ = this.documentService.getRecentDocuments(6);
+          this.popularDocuments$ = this.documentService.getPopularDocuments(6);
+          this.userDocuments$ = this.documentService.getUserDocuments(6);
         },
         error: (err) => {
           console.error('Error deleting document:', err);
