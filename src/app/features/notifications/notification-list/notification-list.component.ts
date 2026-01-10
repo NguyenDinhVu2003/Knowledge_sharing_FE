@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
-import { Observable, map } from 'rxjs';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
+import { Observable, map, filter } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,7 +14,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { FormsModule } from '@angular/forms';
 import { NotificationService } from '../../../core/services/notification.service';
-import { Notification } from '../../../core/models/notification.model';
+import { NotificationWebSocketService } from '../../../core/services/notification-websocket.service';
+import { Notification as NotificationModel } from '../../../core/models/notification.model';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { TimeAgoPipe } from '../../../shared/pipes/time-ago.pipe';
@@ -45,13 +46,14 @@ import { TimeAgoPipe } from '../../../shared/pipes/time-ago.pipe';
 })
 export class NotificationListComponent implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
+  private wsService = inject(NotificationWebSocketService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
 
-  notifications$!: Observable<Notification[]>;
+  notifications$!: Observable<NotificationModel[]>;
   unreadCount$!: Observable<number>;
   filterMode: 'all' | 'unread' = 'all';
-  filteredNotifications$!: Observable<Notification[]>;
+  filteredNotifications$!: Observable<NotificationModel[]>;
   loading: boolean = true;
 
   ngOnInit(): void {
@@ -60,18 +62,58 @@ export class NotificationListComponent implements OnInit, OnDestroy {
     // Subscribe to unread count from service
     this.unreadCount$ = this.notificationService.getUnreadCount();
     
+    // Subscribe to real-time notifications via WebSocket
+    // Only show snackbar when NOT on notifications page
+    this.wsService.getNotifications().subscribe(notification => {
+      if (notification) {
+        console.log('🔔 New real-time notification received:', notification);
+        
+        // Check if currently on notifications page
+        const isOnNotificationsPage = this.router.url.includes('/notifications');
+        
+        if (!isOnNotificationsPage) {
+          // Show browser notification
+          this.showBrowserNotification(notification);
+          
+          // Play notification sound
+          this.playNotificationSound();
+          
+          // Show styled snackbar with custom CSS
+          const snackBarRef = this.snackBar.open(
+            notification.message, 
+            'View', 
+            {
+              duration: 6000,
+              horizontalPosition: 'right',
+              verticalPosition: 'top',
+              panelClass: ['custom-notification-snackbar']
+            }
+          );
+          
+          snackBarRef.onAction().subscribe(() => {
+            if (notification.documentId) {
+              this.router.navigate(['/documents', notification.documentId]);
+            }
+          });
+        } else {
+          // If on notifications page, just reload the list silently
+          console.log('🔔 On notifications page, reloading list silently...');
+        }
+        
+        // Always reload notifications list and count
+        this.loadNotifications();
+        this.unreadCount$ = this.notificationService.getUnreadCount();
+      }
+    });
+    
     // Debug: Log unread count changes
     this.unreadCount$.subscribe(count => {
       console.log('=== NotificationListComponent: Unread count changed to:', count);
     });
-    
-    // Start polling for new notifications
-    this.notificationService.startPolling();
   }
 
   ngOnDestroy(): void {
-    // Stop polling to prevent memory leaks
-    this.notificationService.stopPolling();
+    // Cleanup if needed
   }
 
   /**
@@ -123,7 +165,7 @@ export class NotificationListComponent implements OnInit, OnDestroy {
   /**
    * Mark notification as read and navigate to document
    */
-  markAsRead(notification: Notification): void {
+  markAsRead(notification: NotificationModel): void {
     if (notification.isRead) {
       // Already read, just navigate
       if (notification.documentId) {
@@ -167,7 +209,7 @@ export class NotificationListComponent implements OnInit, OnDestroy {
   /**
    * Delete notification with confirmation
    */
-  deleteNotification(notification: Notification): void {
+  deleteNotification(notification: NotificationModel): void {
     const confirmed = window.confirm('Are you sure you want to delete this notification?');
     if (confirmed) {
       this.notificationService.deleteNotification(notification.id).subscribe({
@@ -220,7 +262,7 @@ export class NotificationListComponent implements OnInit, OnDestroy {
    */
   getNotificationIcon(message: string): string {
     if (message.toLowerCase().includes('new document')) {
-      return 'fiber_new';
+      return 'description';
     } else if (message.toLowerCase().includes('updated')) {
       return 'update';
     } else if (message.toLowerCase().includes('rating') || message.toLowerCase().includes('rated')) {
@@ -229,5 +271,45 @@ export class NotificationListComponent implements OnInit, OnDestroy {
       return 'comment';
     }
     return 'notifications';
+  }
+
+  /**
+   * Show browser notification (optional)
+   */
+  private showBrowserNotification(notification: any): void {
+    if (!('Notification' in window)) {
+      return;
+    }
+
+    if (Notification.permission === 'granted') {
+      new Notification('New Notification', {
+        body: notification.message,
+        icon: '/assets/icons/notification-icon.png'
+      });
+    } else if (Notification.permission !== 'denied') {
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          new Notification('New Notification', {
+            body: notification.message,
+            icon: '/assets/icons/notification-icon.png'
+          });
+        }
+      });
+    }
+  }
+
+  /**
+   * Play notification sound (optional)
+   */
+  private playNotificationSound(): void {
+    try {
+      const audio = new Audio('/assets/sounds/notification.mp3');
+      audio.volume = 0.3;
+      audio.play().catch(err => {
+        console.log('Could not play sound:', err);
+      });
+    } catch (error) {
+      console.log('Sound playback not available:', error);
+    }
   }
 }

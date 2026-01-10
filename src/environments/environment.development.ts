@@ -1,5 +1,6 @@
 export const environment = {
   production: false,
   apiUrl: 'http://localhost:8090/api',
-  tokenKey: 'auth_token'
+  tokenKey: 'auth_token',
+  wsEnabled: true  // Enable/disable WebSocket
 };
