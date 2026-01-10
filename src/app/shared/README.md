@@ -130,7 +130,7 @@ export class LayoutComponent {}
 
 #### Content
 ```
-© 2025 Knowledge Sharing Platform | Student Project
+Knowledge Sharing Platform
 ```
 
 ---

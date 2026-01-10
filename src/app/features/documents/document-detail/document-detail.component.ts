@@ -276,34 +276,131 @@ export class DocumentDetailComponent implements OnInit {
   }
 
   rateDocument(rating: number): void {
-    if (!this.document) return;
+    if (!this.document) {
+      console.error('Cannot rate: document is null');
+      return;
+    }
     
+    console.log('🌟 rateDocument called with rating:', rating, 'documentId:', this.document.id);
+    
+    // Store old rating for rollback if needed
+    const oldRating = this.userRating;
+    const oldStats = this.ratingStats ? { ...this.ratingStats } : null;
+    
+    // Optimistic update - update UI immediately
+    this.userRating = rating;
+    
+    // Update stats optimistically
+    if (this.ratingStats) {
+      // If user already rated, we're updating
+      if (oldRating > 0) {
+        // Remove old rating from distribution
+        this.decrementRatingStar(this.ratingStats, oldRating);
+        // Add new rating to distribution
+        this.incrementRatingStar(this.ratingStats, rating);
+      } else {
+        // New rating - increment total and add to distribution
+        this.ratingStats.totalRatings++;
+        this.incrementRatingStar(this.ratingStats, rating);
+      }
+      
+      // Recalculate average
+      this.recalculateAverage(this.ratingStats);
+    }
+    
+    // Force change detection
+    this.cdr.detectChanges();
+    
+    console.log('🌟 Calling ratingService.rateDocument API...');
+    
+    // Send to backend
     this.ratingService.rateDocument(this.document.id, rating).subscribe({
       next: (ratingResponse) => {
-        this.userRating = ratingResponse.ratingValue;
+        console.log('✅ Rating API success:', ratingResponse);
+        // Show success message
         this.snackBar.open(`Rated ${rating} stars`, 'Close', { duration: 2000 });
-        // Reload stats to get updated average
+        // Reload stats from server to ensure accuracy
         this.loadRatingStats(this.document!.id);
       },
       error: (error) => {
-        console.error('Error rating document:', error);
+        console.error('❌ Error rating document:', error);
+        // Rollback optimistic update on error
+        this.userRating = oldRating;
+        if (oldStats) {
+          this.ratingStats = oldStats;
+        }
+        this.cdr.detectChanges();
         this.snackBar.open('Failed to rate document', 'Close', { duration: 3000 });
       }
     });
+  }
+  
+  private incrementRatingStar(stats: RatingStats, rating: number): void {
+    switch(rating) {
+      case 5: stats.fiveStars++; break;
+      case 4: stats.fourStars++; break;
+      case 3: stats.threeStars++; break;
+      case 2: stats.twoStars++; break;
+      case 1: stats.oneStar++; break;
+    }
+  }
+  
+  private decrementRatingStar(stats: RatingStats, rating: number): void {
+    switch(rating) {
+      case 5: stats.fiveStars = Math.max(0, stats.fiveStars - 1); break;
+      case 4: stats.fourStars = Math.max(0, stats.fourStars - 1); break;
+      case 3: stats.threeStars = Math.max(0, stats.threeStars - 1); break;
+      case 2: stats.twoStars = Math.max(0, stats.twoStars - 1); break;
+      case 1: stats.oneStar = Math.max(0, stats.oneStar - 1); break;
+    }
+  }
+  
+  private recalculateAverage(stats: RatingStats): void {
+    if (stats.totalRatings === 0) {
+      stats.averageRating = 0;
+      return;
+    }
+    
+    const totalScore = (stats.fiveStars * 5) + (stats.fourStars * 4) + 
+                       (stats.threeStars * 3) + (stats.twoStars * 2) + 
+                       (stats.oneStar * 1);
+    stats.averageRating = totalScore / stats.totalRatings;
   }
 
   deleteRating(): void {
     if (!this.document) return;
     
+    // Store old values for rollback if needed
+    const oldRating = this.userRating;
+    const oldStats = this.ratingStats ? { ...this.ratingStats } : null;
+    
+    // Optimistic update - update UI immediately
+    if (this.ratingStats && oldRating > 0) {
+      // Remove rating from distribution
+      this.decrementRatingStar(this.ratingStats, oldRating);
+      this.ratingStats.totalRatings = Math.max(0, this.ratingStats.totalRatings - 1);
+      // Recalculate average
+      this.recalculateAverage(this.ratingStats);
+    }
+    this.userRating = 0;
+    
+    // Force change detection
+    this.cdr.detectChanges();
+    
     this.ratingService.deleteRating(this.document.id).subscribe({
       next: () => {
-        this.userRating = 0;
         this.snackBar.open('Rating removed', 'Close', { duration: 2000 });
-        // Reload stats
+        // Reload stats from server to ensure accuracy
         this.loadRatingStats(this.document!.id);
       },
       error: (error) => {
         console.error('Error deleting rating:', error);
+        // Rollback optimistic update on error
+        this.userRating = oldRating;
+        if (oldStats) {
+          this.ratingStats = oldStats;
+        }
+        this.cdr.detectChanges();
         this.snackBar.open('Failed to remove rating', 'Close', { duration: 3000 });
       }
     });
@@ -418,8 +515,10 @@ export class DocumentDetailComponent implements OnInit {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   }
 
-  formatDate(date: Date | string): string {
+  formatDate(date: Date | string | null | undefined): string {
+    if (!date) return 'N/A';
     const d = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(d.getTime())) return 'Invalid Date';
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   }
 

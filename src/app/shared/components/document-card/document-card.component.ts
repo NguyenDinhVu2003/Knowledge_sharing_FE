@@ -73,6 +73,7 @@ export class DocumentCardComponent {
   formatDate(date: string | undefined): string {
     if (!date) return 'N/A';
     const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) return 'Invalid Date';
     return dateObj.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',

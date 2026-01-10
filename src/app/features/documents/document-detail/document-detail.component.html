@@ -196,7 +196,7 @@
                         Version {{ version.versionNumber }}
                       </mat-panel-title>
                       <mat-panel-description>
-                        {{ formatDate(version.updatedAt) }}
+                        {{ version.updatedAt ? formatDate(version.updatedAt) : 'N/A' }}
                       </mat-panel-description>
                     </mat-expansion-panel-header>
                     
