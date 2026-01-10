@@ -2,6 +2,10 @@
   max-width: 900px;
   margin: 0 auto;
   padding: 24px;
+
+  @media (max-width: 768px) {
+    padding: 16px 12px;
+  }
 }
 
 .page-header {
@@ -10,6 +14,13 @@
   align-items: center;
   margin-bottom: 24px;
 
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
   .title-section {
     h1 {
       display: flex;
@@ -17,6 +28,11 @@
       gap: 12px;
       margin: 0 0 8px 0;
       color: #333;
+
+      @media (max-width: 768px) {
+        font-size: 24px;
+        gap: 8px;
+      }
 
       mat-icon {
         color: #ff9800;
@@ -27,6 +43,10 @@
       margin: 0;
       color: #666;
       font-size: 14px;
+
+      @media (max-width: 768px) {
+        font-size: 13px;
+      }
     }
   }
 
@@ -34,6 +54,16 @@
     display: flex;
     gap: 12px;
     align-items: center;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      width: 100%;
+      gap: 8px;
+
+      button {
+        width: 100%;
+      }
+    }
   }
 }
 

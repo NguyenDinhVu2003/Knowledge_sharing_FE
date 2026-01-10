@@ -13,15 +13,29 @@
     font-weight: 500;
     margin: 0;
 
+    @media (max-width: 768px) {
+      font-size: 20px;
+    }
+
     mat-icon {
       font-size: 28px;
       width: 28px;
       height: 28px;
+
+      @media (max-width: 768px) {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
     }
 
     .count {
       color: rgba(0, 0, 0, 0.6);
       font-size: 20px;
+
+      @media (max-width: 768px) {
+        font-size: 16px;
+      }
     }
   }
 }
