@@ -1,7 +1,7 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Observable, combineLatest, forkJoin, of } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 import { map, startWith, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 // Material Modules
@@ -45,10 +45,10 @@ import { FooterComponent } from '../../../shared/components/footer/footer.compon
 export class UserInterestsComponent implements OnInit {
   private userInterestService = inject(UserInterestService);
   private snackBar = inject(MatSnackBar);
+  private cdr = inject(ChangeDetectorRef);
 
   allTags$!: Observable<Tag[]>;
   popularTags$!: Observable<Tag[]>;
-  userInterests$!: Observable<UserInterest[]>;
   selectedTagIds: number[] = [];
   originalSelectedIds: number[] = [];
   searchControl = new FormControl('');
@@ -62,50 +62,61 @@ export class UserInterestsComponent implements OnInit {
   }
 
   loadData() {
+    console.log('🔄 loadData started, setting loading = true');
     this.loading = true;
 
     forkJoin({
       allTags: this.userInterestService.getAllTags(),
-      popularTags: this.userInterestService.getPopularTags(),
-      userInterests: this.userInterestService.getUserInterests()
+      popularTags: this.userInterestService.getPopularTags(10)
     }).subscribe({
       next: (data) => {
+        console.log('✅ Data loaded successfully:', data);
+        
         this.allTagsCache = data.allTags;
         this.allTags$ = of(data.allTags);
         this.popularTags$ = of(data.popularTags);
-        this.userInterests$ = of(data.userInterests);
 
-        // Initialize selected tags
-        this.selectedTagIds = data.userInterests.map(i => i.tagId);
+        // Initialize selected tags from allTags where isInterested = true
+        this.selectedTagIds = data.allTags
+          .filter(tag => tag.isInterested)
+          .map(tag => tag.id);
         this.originalSelectedIds = [...this.selectedTagIds];
 
+        console.log('✅ Selected tag IDs:', this.selectedTagIds);
+        console.log('✅ Setting loading = false');
+        
+        this.loading = false;
+        
         // Setup search filter
         this.setupSearchFilter();
-
-        this.loading = false;
+// Force change detection
+        this.cdr.detectChanges();
+        
+        console.log('✅ After setting loading:', this.loading);
       },
       error: (err) => {
+        console.error('❌ Error loading data:', err);
         this.loading = false;
+        this.cdr.detectChanges();
         this.snackBar.open('Failed to load data', 'Close', { duration: 3000 });
       }
     });
   }
 
   setupSearchFilter() {
-    this.filteredTags$ = combineLatest([
-      this.allTags$,
-      this.searchControl.valueChanges.pipe(
-        startWith(''),
-        debounceTime(300),
-        distinctUntilChanged()
-      )
-    ]).pipe(
-      map(([tags, searchTerm]) => {
+    this.filteredTags$ = this.searchControl.valueChanges.pipe(
+      startWith(''),
+      debounceTime(300),
+      distinctUntilChanged(),
+      map(searchTerm => {
         if (!searchTerm || searchTerm.trim() === '') {
-          return tags;
+          // Return cached tags when no search term
+          return this.allTagsCache;
         }
+        // For search, we'll filter client-side from cache
+        // Or call API with search param (better for large datasets)
         const search = searchTerm.toLowerCase();
-        return tags.filter(tag => 
+        return this.allTagsCache.filter(tag => 
           tag.name.toLowerCase().includes(search) ||
           tag.description?.toLowerCase().includes(search)
         );
@@ -155,14 +166,23 @@ export class UserInterestsComponent implements OnInit {
 
     this.saving = true;
     this.userInterestService.updateUserInterests(this.selectedTagIds).subscribe({
-      next: () => {
+      next: (updatedTags) => {
         this.saving = false;
         this.originalSelectedIds = [...this.selectedTagIds];
+        
+        // Update isInterested flag in cache
+        this.allTagsCache = this.allTagsCache.map(tag => ({
+          ...tag,
+          isInterested: this.selectedTagIds.includes(tag.id)
+        }));
+        
         this.snackBar.open('Interests saved successfully!', 'Close', { duration: 3000 });
       },
       error: (err) => {
         this.saving = false;
-        this.snackBar.open('Failed to save interests', 'Close', { duration: 3000 });
+        console.error('Error saving interests:', err);
+        const errorMsg = err.error?.message || 'Failed to save interests';
+        this.snackBar.open(errorMsg, 'Close', { duration: 3000 });
       }
     });
   }
