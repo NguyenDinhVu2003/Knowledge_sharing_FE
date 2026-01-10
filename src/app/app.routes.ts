@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { adminGuard } from './core/guards/admin.guard';
+import { employeeGuard } from './core/guards/employee.guard';
 
 export const routes: Routes = [
   {
@@ -9,39 +11,45 @@ export const routes: Routes = [
   {
     path: 'home',
     loadChildren: () => import('./features/home/home.module').then(m => m.HomeModule),
-    canActivate: [authGuard]
+    canMatch: [authGuard, employeeGuard]
   },
   {
     path: 'documents',
     loadChildren: () => import('./features/documents/documents.module').then(m => m.DocumentsModule),
-    canActivate: [authGuard]
+    canMatch: [authGuard, employeeGuard]
   },
   {
     path: 'my-documents',
     loadComponent: () => import('./features/documents/document-list/document-list.component').then(m => m.DocumentListComponent),
-    canActivate: [authGuard],
+    canMatch: [authGuard, employeeGuard],
     data: { myDocuments: true },
     title: 'My Documents'
   },
   {
     path: 'search',
     loadChildren: () => import('./features/search/search.module').then(m => m.SearchModule),
-    canActivate: [authGuard]
+    canMatch: [authGuard, employeeGuard]
   },
   {
     path: 'favorites',
     loadChildren: () => import('./features/favorites/favorites.module').then(m => m.FavoritesModule),
-    canActivate: [authGuard]
+    canMatch: [authGuard, employeeGuard]
   },
   {
     path: 'notifications',
     loadChildren: () => import('./features/notifications/notifications.module').then(m => m.NotificationsModule),
-    canActivate: [authGuard]
+    canMatch: [authGuard, employeeGuard]
   },
   {
     path: 'profile',
     loadChildren: () => import('./features/profile/profile.module').then(m => m.ProfileModule),
-    canActivate: [authGuard]
+    canMatch: [authGuard, employeeGuard]
+  },
+  {
+    path: 'admin',
+    loadChildren: () => import('./features/admin/admin.module').then(m => m.AdminModule),
+    canMatch: [authGuard, adminGuard],
+    title: 'Admin Panel'
   },
   {
     path: 'test-shared',
@@ -50,12 +58,12 @@ export const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: '/home',
+    loadComponent: () => import('./shared/components/role-redirect.component').then(m => m.RoleRedirectComponent),
     pathMatch: 'full'
   },
-  // Wildcard route - 404 redirect to home
+  // Wildcard route - redirect to root for role-based handling
   {
     path: '**',
-    redirectTo: '/home'
+    loadComponent: () => import('./shared/components/role-redirect.component').then(m => m.RoleRedirectComponent)
   }
 ];

@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, OnInit, OnDestroy, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { Observable } from 'rxjs';
@@ -27,7 +27,8 @@ import { NotificationService } from '../../../core/services/notification.service
     MatDividerModule
   ],
   templateUrl: './header.component.html',
-  styleUrl: './header.component.scss'
+  styleUrl: './header.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HeaderComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
@@ -48,6 +49,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   // Mobile menu state
   mobileMenuOpen = signal(false);
+  
+  // Cache admin status as signal to prevent infinite change detection
+  isAdmin = signal<boolean>(false);
 
   ngOnInit(): void {
     // Nếu currentUser không được truyền vào, tự động lấy từ AuthService
@@ -55,8 +59,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.currentUser = this.authService.getCurrentUser();
     }
     
-    this.favoriteCount$ = this.favoriteService.getFavoriteCount();
-    this.unreadNotificationCount$ = this.notificationService.getUnreadCount();
+    // Cache admin status to avoid repeated getter calls
+    this.isAdmin.set(this.currentUser?.role === 'ADMIN');
+    
+    // Only load counts for non-admin users
+    if (!this.isAdmin()) {
+      this.favoriteCount$ = this.favoriteService.getFavoriteCount();
+      this.unreadNotificationCount$ = this.notificationService.getUnreadCount();
+    }
     
     // CRITICAL: Do NOT call any API here to fetch notification count
     // This was causing NG0100 errors and 15-20s load times on document detail page

@@ -1,0 +1,336 @@
+<div class="comment-section">
+  <div class="section-header">
+    <h3>
+      <mat-icon>comment</mat-icon>
+      Comments <span class="count">({{ totalElements }})</span>
+    </h3>
+  </div>
+
+  <!-- New Comment Input -->
+  <mat-card class="new-comment-card">
+    <mat-card-content>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Write a comment...</mat-label>
+        <textarea
+          matInput
+          [(ngModel)]="newCommentContent"
+          [maxlength]="MAX_CHARS"
+          rows="3"
+          placeholder="Share your thoughts about this document..."
+          [disabled]="postingComment">
+        </textarea>
+        <mat-hint align="end">
+          {{ getRemainingChars(newCommentContent) }} / {{ MAX_CHARS }}
+        </mat-hint>
+      </mat-form-field>
+      <div class="actions">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="postComment()"
+          [disabled]="!isContentValid(newCommentContent) || postingComment">
+          <mat-icon>send</mat-icon>
+          {{ postingComment ? 'Posting...' : 'Post Comment' }}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading State -->
+  @if (loading) {
+    <div class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading comments...</p>
+    </div>
+  }
+
+  <!-- Comments List -->
+  @if (!loading) {
+    @if (comments.length === 0) {
+      <div class="empty-state">
+        <mat-icon>chat_bubble_outline</mat-icon>
+        <p>No comments yet. Be the first to comment!</p>
+      </div>
+    } @else {
+      <div class="comments-list">
+        @for (comment of comments; track comment.id) {
+          <mat-card class="comment-card">
+            <mat-card-header>
+              <div class="comment-header">
+                <div class="user-info">
+                  <mat-icon class="avatar-icon">account_circle</mat-icon>
+                  <div>
+                    <strong class="username">{{ comment.username }}</strong>
+                    <div class="meta">
+                      <span class="timestamp">{{ comment.createdAt | date:'medium' }}</span>
+                      @if (comment.isEdited) {
+                        <span class="edited-badge">
+                          <mat-icon>edit</mat-icon>
+                          (edited)
+                        </span>
+                      }
+                    </div>
+                  </div>
+                </div>
+                @if (comment.isOwnedByCurrentUser) {
+                  <button mat-icon-button [matMenuTriggerFor]="commentMenu">
+                    <mat-icon>more_vert</mat-icon>
+                  </button>
+                  <mat-menu #commentMenu="matMenu">
+                    <button mat-menu-item (click)="startEdit(comment)">
+                      <mat-icon>edit</mat-icon>
+                      <span>Edit</span>
+                    </button>
+                    <button mat-menu-item (click)="deleteComment(comment)">
+                      <mat-icon color="warn">delete</mat-icon>
+                      <span>Delete</span>
+                    </button>
+                  </mat-menu>
+                }
+              </div>
+            </mat-card-header>
+
+            <mat-card-content>
+              <!-- View Mode -->
+              @if (editingCommentId !== comment.id) {
+                <p class="comment-content">{{ comment.content }}</p>
+              }
+
+              <!-- Edit Mode -->
+              @if (editingCommentId === comment.id) {
+                <div class="edit-mode">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Edit comment</mat-label>
+                    <textarea
+                      matInput
+                      [(ngModel)]="editContent"
+                      [maxlength]="MAX_CHARS"
+                      rows="3">
+                    </textarea>
+                    <mat-hint align="end">
+                      {{ getRemainingChars(editContent) }} / {{ MAX_CHARS }}
+                    </mat-hint>
+                  </mat-form-field>
+                  <div class="edit-actions">
+                    <button
+                      mat-raised-button
+                      color="primary"
+                      (click)="saveEdit(comment.id)"
+                      [disabled]="!isContentValid(editContent)">
+                      <mat-icon>save</mat-icon>
+                      Save
+                    </button>
+                    <button mat-button (click)="cancelEdit()">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              }
+
+              <!-- Comment Actions -->
+              <div class="comment-actions">
+                <button
+                  mat-button
+                  class="like-button"
+                  [class.liked]="comment.isLikedByCurrentUser"
+                  (click)="toggleLike(comment)"
+                  matTooltip="{{ comment.isLikedByCurrentUser ? 'Unlike' : 'Like' }}">
+                  <mat-icon>{{ comment.isLikedByCurrentUser ? 'favorite' : 'favorite_border' }}</mat-icon>
+                  <span>{{ comment.likeCount }}</span>
+                </button>
+
+                <button
+                  mat-button
+                  (click)="showReplyInput(comment.id)"
+                  matTooltip="Reply">
+                  <mat-icon>reply</mat-icon>
+                  <span>Reply</span>
+                </button>
+
+                @if (comment.replyCount > 0) {
+                  @if (!comment.replies) {
+                    <button
+                      mat-button
+                      (click)="loadReplies(comment.id)"
+                      [disabled]="loadingReplies.has(comment.id)">
+                      <mat-icon>{{ loadingReplies.has(comment.id) ? 'hourglass_empty' : 'expand_more' }}</mat-icon>
+                      <span>
+                        {{ loadingReplies.has(comment.id) ? 'Loading...' : 'Show replies (' + comment.replyCount + ')' }}
+                      </span>
+                    </button>
+                  } @else {
+                    <button mat-button (click)="hideReplies(comment)">
+                      <mat-icon>expand_less</mat-icon>
+                      <span>Hide replies</span>
+                    </button>
+                  }
+                }
+              </div>
+
+              <!-- Reply Input -->
+              @if (replyToCommentId === comment.id) {
+                <div class="reply-input">
+                  <mat-divider></mat-divider>
+                  @if (replyToUsername) {
+                    <div class="replying-to">
+                      <mat-icon>reply</mat-icon>
+                      <span>Replying to <strong>@{{ replyToUsername }}</strong></span>
+                    </div>
+                  }
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Write a reply...</mat-label>
+                    <textarea
+                      matInput
+                      [(ngModel)]="replyContent"
+                      [maxlength]="MAX_CHARS"
+                      rows="2"
+                      [disabled]="postingReply">
+                    </textarea>
+                    <mat-hint align="end">
+                      {{ getRemainingChars(replyContent) }} / {{ MAX_CHARS }}
+                    </mat-hint>
+                  </mat-form-field>
+                  <div class="reply-actions">
+                    <button
+                      mat-raised-button
+                      color="primary"
+                      (click)="postReply(comment.id)"
+                      [disabled]="!isContentValid(replyContent) || postingReply">
+                      <mat-icon>send</mat-icon>
+                      {{ postingReply ? 'Posting...' : 'Post Reply' }}
+                    </button>
+                    <button mat-button (click)="cancelReply()">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              }
+
+              <!-- Replies List -->
+              @if (comment.replies && comment.replies.length > 0) {
+                <div class="replies-list">
+                  <mat-divider></mat-divider>
+                  @for (reply of comment.replies; track reply.id) {
+                    <div class="reply-item">
+                      <div class="reply-header">
+                        <div class="user-info">
+                          <mat-icon class="avatar-icon small">account_circle</mat-icon>
+                          <div>
+                            <strong class="username">{{ reply.username }}</strong>
+                            <div class="meta">
+                              <span class="timestamp">{{ reply.createdAt | date:'short' }}</span>
+                              @if (reply.isEdited) {
+                                <span class="edited-badge small">
+                                  <mat-icon>edit</mat-icon>
+                                  (edited)
+                                </span>
+                              }
+                            </div>
+                          </div>
+                        </div>
+                        @if (reply.isOwnedByCurrentUser) {
+                          <button mat-icon-button [matMenuTriggerFor]="replyMenu" class="small">
+                            <mat-icon>more_vert</mat-icon>
+                          </button>
+                          <mat-menu #replyMenu="matMenu">
+                            <button mat-menu-item (click)="startEdit(reply)">
+                              <mat-icon>edit</mat-icon>
+                              <span>Edit</span>
+                            </button>
+                            <button mat-menu-item (click)="deleteComment(reply)">
+                              <mat-icon color="warn">delete</mat-icon>
+                              <span>Delete</span>
+                            </button>
+                          </mat-menu>
+                        }
+                      </div>
+
+                      <!-- Reply Content -->
+                      @if (editingCommentId !== reply.id) {
+                        <p class="reply-content">{{ reply.content }}</p>
+                      }
+
+                      <!-- Edit Reply -->
+                      @if (editingCommentId === reply.id) {
+                        <div class="edit-mode">
+                          <mat-form-field appearance="outline" class="full-width">
+                            <textarea
+                              matInput
+                              [(ngModel)]="editContent"
+                              [maxlength]="MAX_CHARS"
+                              rows="2">
+                            </textarea>
+                            <mat-hint align="end">
+                              {{ getRemainingChars(editContent) }} / {{ MAX_CHARS }}
+                            </mat-hint>
+                          </mat-form-field>
+                          <div class="edit-actions">
+                            <button
+                              mat-raised-button
+                              color="primary"
+                              (click)="saveEdit(reply.id)"
+                              [disabled]="!isContentValid(editContent)">
+                              <mat-icon>save</mat-icon>
+                              Save
+                            </button>
+                            <button mat-button (click)="cancelEdit()">
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      }
+
+                      <!-- Reply Actions -->
+                      <div class="reply-actions-row">
+                        <button
+                          mat-button
+                          class="like-button small"
+                          [class.liked]="reply.isLikedByCurrentUser"
+                          (click)="toggleLike(reply)">
+                          <mat-icon>{{ reply.isLikedByCurrentUser ? 'favorite' : 'favorite_border' }}</mat-icon>
+                          <span>{{ reply.likeCount }}</span>
+                        </button>
+                        
+                        <button
+                          mat-button
+                          class="small"
+                          (click)="showReplyInput(comment.id, reply.username)"
+                          matTooltip="Reply to {{ reply.username }}">
+                          <mat-icon>reply</mat-icon>
+                          <span>Reply</span>
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPages > 1) {
+        <div class="pagination">
+          <button
+            mat-button
+            (click)="prevPage()"
+            [disabled]="first">
+            <mat-icon>chevron_left</mat-icon>
+            Previous
+          </button>
+          <span class="page-info">
+            Page {{ page + 1 }} of {{ totalPages }}
+          </span>
+          <button
+            mat-button
+            (click)="nextPage()"
+            [disabled]="last">
+            Next
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+      }
+    }
+  }
+</div>

@@ -20,6 +20,7 @@ import { FavoriteService } from '../../../core/services/favorite.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { DocumentCardComponent } from '../../../shared/components/document-card/document-card.component';
+import { CommentSectionComponent } from '../../../shared/components/comment-section/comment-section.component';
 
 @Component({
   selector: 'app-document-detail',
@@ -38,7 +39,8 @@ import { DocumentCardComponent } from '../../../shared/components/document-card/
     MatTooltipModule,
     HeaderComponent,
     FooterComponent,
-    DocumentCardComponent
+    DocumentCardComponent,
+    CommentSectionComponent
   ],
   templateUrl: './document-detail.component.html',
   styleUrls: ['./document-detail.component.scss']

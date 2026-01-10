@@ -23,13 +23,10 @@ export class AuthService {
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor() {
-    console.log('[AuthService] Constructor - isBrowser:', this.isBrowser);
     // Initialize user state from storage on service creation
     if (this.isBrowser) {
       const user = this.getUserFromStorage();
       const token = this.getToken();
-      console.log('[AuthService] Constructor - User from storage:', user ? 'User exists' : 'No user');
-      console.log('[AuthService] Constructor - Token from storage:', token ? 'Token exists' : 'No token');
       if (user && token) {
         this.currentUserSubject.next(user);
       } else if (token && !user) {
@@ -168,26 +165,14 @@ export class AuthService {
   isAuthenticated(): boolean {
     // Force browser check - in browser environment, always try to read from localStorage
     if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
-      console.log('[AuthService] isAuthenticated - No window or localStorage available');
       return false;
     }
     
     // Read token directly from localStorage to avoid any caching issues
     const token = localStorage.getItem(this.TOKEN_KEY);
     
-    console.log('[AuthService] isAuthenticated - Token exists:', !!token);
-    
     if (!token) {
-      console.log('[AuthService] No token found in localStorage');
       return false;
-    }
-    
-    // Check if token is expired for logging purposes only
-    const isExpired = this.isTokenExpired(token);
-    if (isExpired) {
-      console.warn('[AuthService] Token is expired but keeping user logged in. Backend will validate.');
-    } else {
-      console.log('[AuthService] Token is valid');
     }
     
     // Just check if token exists, don't clear auth data even if expired

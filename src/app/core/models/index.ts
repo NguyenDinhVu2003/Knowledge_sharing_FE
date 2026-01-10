@@ -4,4 +4,6 @@ export * from './notification.model';
 export * from './favorite.model';
 export * from './rating.model';
 export * from './user-interest.model';
+export * from './admin.model';
 export * from './common.model';
+export * from './comment.model';

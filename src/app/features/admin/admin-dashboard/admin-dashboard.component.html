@@ -1,0 +1,261 @@
+<app-header></app-header>
+
+<div class="admin-dashboard-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="title-section">
+      <h1>
+        <mat-icon>dashboard</mat-icon>
+        Admin Dashboard
+      </h1>
+      <p class="subtitle">System overview and statistics</p>
+    </div>
+    <div class="actions">
+      <button mat-raised-button color="primary" (click)="refreshStatistics()" [disabled]="loading">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+      <button mat-raised-button color="accent" (click)="navigateToUserManagement()">
+        <mat-icon>people</mat-icon>
+        Manage Users
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+      <p>Loading statistics...</p>
+    </div>
+  }
+
+  <!-- Statistics Content -->
+  @if (!loading && statistics) {
+    <div class="dashboard-content">
+      <!-- Summary Cards Row 1: Users -->
+      <div class="summary-cards">
+        <mat-card class="stat-card user-card">
+          <mat-card-content>
+            <div class="stat-icon">
+              <mat-icon>people</mat-icon>
+            </div>
+            <div class="stat-info">
+              <h2>{{ statistics.totalUsers }}</h2>
+              <p>Total Users</p>
+              <span class="stat-detail">{{ statistics.activeUsers }} active</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card document-card">
+          <mat-card-content>
+            <div class="stat-icon">
+              <mat-icon>description</mat-icon>
+            </div>
+            <div class="stat-info">
+              <h2>{{ statistics.totalDocuments }}</h2>
+              <p>Total Documents</p>
+              <span class="stat-detail">{{ statistics.documentsThisMonth }} this month</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card rating-card">
+          <mat-card-content>
+            <div class="stat-icon">
+              <mat-icon>star</mat-icon>
+            </div>
+            <div class="stat-info">
+              <h2>{{ statistics.averageRating.toFixed(1) }}</h2>
+              <p>Avg Rating</p>
+              <span class="stat-detail">{{ statistics.totalRatings }} ratings</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card favorite-card">
+          <mat-card-content>
+            <div class="stat-icon">
+              <mat-icon>favorite</mat-icon>
+            </div>
+            <div class="stat-info">
+              <h2>{{ statistics.totalFavorites }}</h2>
+              <p>Total Favorites</p>
+              <span class="stat-detail">Engagement</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Summary Cards Row 2: More Stats -->
+      <div class="summary-cards">
+        <mat-card class="stat-card notification-card">
+          <mat-card-content>
+            <div class="stat-icon">
+              <mat-icon>notifications</mat-icon>
+            </div>
+            <div class="stat-info">
+              <h2>{{ statistics.totalNotifications }}</h2>
+              <p>Notifications</p>
+              <span class="stat-detail">System-wide</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card tag-card">
+          <mat-card-content>
+            <div class="stat-icon">
+              <mat-icon>label</mat-icon>
+            </div>
+            <div class="stat-info">
+              <h2>{{ statistics.totalTags }}</h2>
+              <p>Tags</p>
+              <span class="stat-detail">Categories</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card group-card">
+          <mat-card-content>
+            <div class="stat-icon">
+              <mat-icon>group_work</mat-icon>
+            </div>
+            <div class="stat-info">
+              <h2>{{ statistics.totalGroups }}</h2>
+              <p>Groups</p>
+              <span class="stat-detail">Collaborations</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card new-user-card">
+          <mat-card-content>
+            <div class="stat-icon">
+              <mat-icon>person_add</mat-icon>
+            </div>
+            <div class="stat-info">
+              <h2>{{ statistics.newUsersThisMonth }}</h2>
+              <p>New Users</p>
+              <span class="stat-detail">This month</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Detailed Statistics -->
+      <div class="detail-section">
+        <!-- Documents by Type -->
+        <mat-card class="detail-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>insert_drive_file</mat-icon>
+              Documents by Type
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="type-list">
+              @for (entry of getObjectEntries(statistics.documentsByType); track entry[0]) {
+                <div class="type-item">
+                  <span class="type-name">{{ entry[0] }}</span>
+                  <span class="type-count">{{ entry[1] }}</span>
+                </div>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Documents by Sharing Level -->
+        <mat-card class="detail-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>security</mat-icon>
+              Documents by Sharing Level
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="type-list">
+              @for (entry of getObjectEntries(statistics.documentsBySharingLevel); track entry[0]) {
+                <div class="type-item">
+                  <span class="type-name">{{ entry[0] }}</span>
+                  <span class="type-count">{{ entry[1] }}</span>
+                </div>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Top Performers -->
+      <div class="top-performers">
+        <!-- Top Tags -->
+        <mat-card class="top-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>trending_up</mat-icon>
+              Top Tags
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="top-list">
+              @for (entry of getObjectEntries(statistics.topTags); track entry[0]) {
+                <div class="top-item">
+                  <mat-chip>{{ entry[0] }}</mat-chip>
+                  <span class="top-count">{{ entry[1] }} docs</span>
+                </div>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Top Contributors -->
+        <mat-card class="top-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>emoji_events</mat-icon>
+              Top Contributors
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="top-list">
+              @for (entry of getObjectEntries(statistics.topContributors); track entry[0]) {
+                <div class="top-item">
+                  <span class="contributor-name">
+                    <mat-icon>person</mat-icon>
+                    {{ entry[0] }}
+                  </span>
+                  <span class="top-count">{{ entry[1] }} docs</span>
+                </div>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Top Rated Documents -->
+        <mat-card class="top-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>star_rate</mat-icon>
+              Top Rated Documents
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="top-list">
+              @for (entry of getObjectEntries(statistics.topRatedDocuments); track entry[0]) {
+                <div class="top-item">
+                  <span class="document-title">{{ entry[0] }}</span>
+                  <span class="top-count">
+                    <mat-icon class="star-icon">star</mat-icon>
+                    {{ entry[1] }}
+                  </span>
+                </div>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  }
+</div>
+
+<app-footer></app-footer>

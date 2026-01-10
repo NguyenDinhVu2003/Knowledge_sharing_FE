@@ -10,7 +10,7 @@
     </div>
 
     <!-- Desktop Navigation -->
-    <nav class="desktop-nav" aria-label="Main navigation">
+    <nav class="desktop-nav" aria-label="Main navigation" *ngIf="!isAdmin()">
       <a mat-button routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
         <mat-icon>home</mat-icon>
         <span>Home</span>
@@ -36,6 +36,18 @@
         <span>Notifications</span>
       </a>
     </nav>
+    
+    <!-- Admin Navigation -->
+    <nav class="desktop-nav" aria-label="Admin navigation" *ngIf="isAdmin()">
+      <a mat-button routerLink="/admin/dashboard" routerLinkActive="active">
+        <mat-icon>dashboard</mat-icon>
+        <span>Dashboard</span>
+      </a>
+      <a mat-button routerLink="/admin/users" routerLinkActive="active">
+        <mat-icon>people</mat-icon>
+        <span>Users</span>
+      </a>
+    </nav>
 
     <!-- User Menu -->
     <div class="user-section" *ngIf="currentUser">
@@ -48,7 +60,7 @@
           <span>{{ currentUser.username }}</span>
         </div>
         <mat-divider></mat-divider>
-        <button mat-menu-item routerLink="/profile">
+        <button mat-menu-item routerLink="/profile" *ngIf="!isAdmin()">
           <mat-icon>settings</mat-icon>
           <span>Profile / Interests</span>
         </button>
@@ -70,7 +82,7 @@
 </mat-toolbar>
 
 <!-- Mobile Navigation Menu -->
-<div class="mobile-nav" [class.open]="mobileMenuOpen()" *ngIf="mobileMenuOpen()">
+<div class="mobile-nav" [class.open]="mobileMenuOpen()" *ngIf="mobileMenuOpen() && !isAdmin()">
   <nav aria-label="Mobile navigation">
     <a mat-button routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMobileMenu()">
       <mat-icon>home</mat-icon>

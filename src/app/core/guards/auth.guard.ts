@@ -1,4 +1,4 @@
-import { CanActivateFn, Router } from '@angular/router';
+import { CanMatchFn, CanActivateFn, Router, Route, UrlSegment, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 
@@ -6,7 +6,7 @@ import { AuthService } from '../services/auth.service';
  * Route guard that protects routes requiring authentication
  * Redirects to login page if user is not authenticated
  */
-export const authGuard: CanActivateFn = (route, state) => {
+export const authGuard: CanMatchFn = (route: Route, segments: UrlSegment[]) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
@@ -14,20 +14,12 @@ export const authGuard: CanActivateFn = (route, state) => {
   const token = authService.getToken();
   const isAuth = authService.isAuthenticated();
   
-  console.log('[AuthGuard] ========================================');
-  console.log('[AuthGuard] Checking authentication for:', state.url);
-  console.log('[AuthGuard] Token exists:', !!token);
-  console.log('[AuthGuard] isAuthenticated Result:', isAuth);
-  console.log('[AuthGuard] ========================================');
-  
   if (isAuth && token) {
     return true;
   }
 
   // Store the attempted URL for redirecting after login
-  const returnUrl = state.url;
-  
-  console.log('[AuthGuard] ❌ NOT authenticated, redirecting to login with returnUrl:', returnUrl);
+  const returnUrl = '/' + segments.map(s => s.path).join('/');
   
   // Redirect to login page with return URL
   router.navigate(['/auth/login'], { 
@@ -41,7 +33,7 @@ export const authGuard: CanActivateFn = (route, state) => {
  * Route guard that prevents authenticated users from accessing auth pages
  * Redirects to home page if user is already authenticated
  */
-export const noAuthGuard: CanActivateFn = (route, state) => {
+export const noAuthGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
@@ -59,7 +51,7 @@ export const noAuthGuard: CanActivateFn = (route, state) => {
  * Usage: Add 'roles' data to route configuration
  * Example: { path: 'admin', canActivate: [roleGuard], data: { roles: ['ADMIN'] } }
  */
-export const roleGuard: CanActivateFn = (route, state) => {
+export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
