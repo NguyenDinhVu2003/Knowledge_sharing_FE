@@ -79,45 +79,149 @@ img {
   height: auto;
 }
 
-/* Custom Notification Snackbar Styling */
+/* Custom Notification Snackbar Styling - Modern Design */
 .custom-notification-snackbar {
+  /* Modern gradient with blue/purple theme */
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
   color: white !important;
   font-weight: 500 !important;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3) !important;
-  border-radius: 8px !important;
-  min-width: 350px !important;
+  
+  /* Enhanced shadow for depth */
+  box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3), 
+              0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  
+  /* Smooth rounded corners */
+  border-radius: 12px !important;
+  
+  /* Size constraints */
+  min-width: 380px !important;
   max-width: 500px !important;
+  
+  /* Add subtle border */
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  
+  /* Backdrop blur effect for modern look */
+  backdrop-filter: blur(10px) !important;
+  
+  /* Animation */
+  animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
+  
+  /* Ensure it appears above everything */
+  z-index: 9999 !important;
+  
+  /* Add subtle glow effect */
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.custom-notification-snackbar::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 13px;
+  opacity: 0.3;
+  filter: blur(8px);
+  z-index: -1;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 @media (max-width: 768px) {
   .custom-notification-snackbar {
-    min-width: 280px !important;
-    max-width: calc(100vw - 32px) !important;
+    min-width: 300px !important;
+    max-width: calc(100vw - 24px) !important;
+    margin: 8px !important;
   }
 }
 
 .custom-notification-snackbar .mat-mdc-snack-bar-label {
   color: white !important;
   font-size: 15px !important;
-  line-height: 1.5 !important;
-  padding: 4px 0 !important;
+  line-height: 1.6 !important;
+  padding: 8px 0 !important;
+  font-weight: 400 !important;
+  
+  /* Add icon before text */
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+/* Add notification icon */
+.custom-notification-snackbar .mat-mdc-snack-bar-label::before {
+  content: '🔔';
+  font-size: 22px;
+  flex-shrink: 0;
+  animation: bellRing 0.5s ease-in-out 2;
+}
+
+@keyframes bellRing {
+  0%, 100% { transform: rotate(0deg); }
+  10%, 30%, 50%, 70%, 90% { transform: rotate(-10deg); }
+  20%, 40%, 60%, 80% { transform: rotate(10deg); }
 }
 
 .custom-notification-snackbar .mat-mdc-button {
-  background-color: rgba(255, 255, 255, 0.2) !important;
-  color: white !important;
+  /* Modern button style */
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  color: #667eea !important;
   font-weight: 600 !important;
-  border-radius: 4px !important;
-  padding: 0 16px !important;
-  transition: all 0.3s ease !important;
+  border-radius: 8px !important;
+  padding: 6px 20px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  text-transform: uppercase !important;
+  font-size: 13px !important;
+  letter-spacing: 0.5px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
 .custom-notification-snackbar .mat-mdc-button:hover {
-  background-color: rgba(255, 255, 255, 0.3) !important;
-  transform: translateY(-1px) !important;
+  background-color: white !important;
+  color: #5568d3 !important;
+  transform: translateY(-2px) scale(1.05) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
 }
 
 .custom-notification-snackbar .mdc-snackbar__surface {
   background-color: transparent !important;
+  padding: 16px 20px !important;
+}
+
+/* Container styling */
+.custom-notification-snackbar .mat-mdc-snack-bar-container {
+  margin: 16px !important;
+}
+
+/* Add progress bar animation at bottom */
+.custom-notification-snackbar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 0 0 12px 12px;
+  animation: progressBar 6s linear forwards;
+}
+
+@keyframes progressBar {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
 }
