@@ -81,21 +81,17 @@
                      (error)="onImageError($event)"
                      (load)="onImageLoad()">
               } @else if (isPdfFile && safeFileUrl) {
-                <iframe [src]="safeFileUrl" class="preview-iframe"></iframe>
-              } @else if (isOfficeFile) {
-                <div class="office-preview-notice">
-                  <mat-icon>description</mat-icon>
-                  <h3>Office Document Preview</h3>
-                  <p>Preview for Office documents (DOC, DOCX, XLS, XLSX, PPT, PPTX) is not available in development mode.</p>
-                  <p>Please download the file to view its contents.</p>
-                  <button mat-raised-button color="primary" (click)="downloadDocument()">
-                    <mat-icon>download</mat-icon>
-                    Download to View
-                  </button>
-                </div>
+                <iframe [src]="safeFileUrl" 
+                        class="preview-iframe"
+                        title="PDF Preview"></iframe>
+              } @else if (isOfficeFile && safeFileUrl) {
+                <iframe [src]="safeFileUrl" 
+                        class="preview-iframe office-iframe"
+                        title="Office Document Preview"
+                        (error)="onOfficePreviewError()"></iframe>
               }
-              @if (!safeFileUrl && !isOfficeFile) {
-                <p style="padding: 20px; color: red;">Error: safeFileUrl is not set</p>
+              @if (!safeFileUrl && (isImageFile || isPdfFile || isOfficeFile)) {
+                <p style="padding: 20px; color: red;">Error: Unable to load preview</p>
               }
             </mat-card-content>
           </mat-card>

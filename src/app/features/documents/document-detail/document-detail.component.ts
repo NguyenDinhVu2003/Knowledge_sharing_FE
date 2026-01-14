@@ -172,27 +172,34 @@ export class DocumentDetailComponent implements OnInit {
   createSafeUrl(filePath: string): void {
     console.log('=== createSafeUrl called with:', filePath);
     
-    // If filePath is relative, convert to absolute URL
+    // Use the file path as-is if it's already an absolute URL (from S3)
     let fullUrl = filePath;
+    
+    // Only convert to localhost URL if it's a relative path (not starting with http)
     if (filePath && !filePath.startsWith('http')) {
       // Ensure filePath starts with /
       const normalizedPath = filePath.startsWith('/') ? filePath : `/${filePath}`;
       // Assume files are served from backend
       fullUrl = `http://localhost:8090${normalizedPath}`;
       console.log('=== Converted relative path to:', fullUrl);
+    } else {
+      console.log('=== Using S3 URL directly:', fullUrl);
     }
     
-    // For Office files, use Microsoft Office Online Viewer
-    if (this.isOfficeFile) {
-      // Encode the file URL for Office viewer
+    // For Office files (DOC, DOCX), use Microsoft Office Online Viewer
+    // Note: Microsoft viewer requires publicly accessible URLs
+    if (this.isOfficeFile && fullUrl) {
       const encodedUrl = encodeURIComponent(fullUrl);
       fullUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}`;
-      console.log('=== Using Office viewer:', fullUrl);
+      console.log('=== Using Office viewer for DOC/DOCX:', fullUrl);
     }
     
-    // For preview, sanitize the URL
+    // For PDF files, use direct URL (browsers can display PDFs natively)
+    // For images, use direct URL as well
+    
+    // Sanitize and set the URL for preview
     this.safeFileUrl = this.sanitizer.bypassSecurityTrustResourceUrl(fullUrl);
-    console.log('=== safeFileUrl created');
+    console.log('=== safeFileUrl created successfully');
   }
 
   /**
@@ -460,11 +467,16 @@ export class DocumentDetailComponent implements OnInit {
   downloadDocument(): void {
     if (!this.document || !this.document.filePath) return;
     
-    // Build download URL
-    const normalizedPath = this.document.filePath.startsWith('/') 
-      ? this.document.filePath 
-      : `/${this.document.filePath}`;
-    const downloadUrl = `http://localhost:8090${normalizedPath}`;
+    // Use the file path as-is if it's already an absolute URL (from S3)
+    let downloadUrl = this.document.filePath;
+    
+    // Only build localhost URL if it's a relative path
+    if (!this.document.filePath.startsWith('http')) {
+      const normalizedPath = this.document.filePath.startsWith('/') 
+        ? this.document.filePath 
+        : `/${this.document.filePath}`;
+      downloadUrl = `http://localhost:8090${normalizedPath}`;
+    }
     
     console.log('=== Downloading file from:', downloadUrl);
     
@@ -539,5 +551,14 @@ export class DocumentDetailComponent implements OnInit {
 
   onImageLoad(): void {
     console.log('=== Image loaded successfully!');
+  }
+
+  onOfficePreviewError(): void {
+    console.error('=== Office preview failed to load');
+    this.snackBar.open(
+      'Office preview unavailable. The file may not be publicly accessible or the Microsoft viewer service may be unavailable.',
+      'Close',
+      { duration: 5000 }
+    );
   }
 }
