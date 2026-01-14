@@ -40,7 +40,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       // If 401 Unauthorized, clear auth data and redirect to login
       // But only if we're not already on an auth page
       if (error.status === 401) {
-        console.error('[AuthInterceptor] ❌ Received 401 from:', req.url);
+        console.error('[AuthInterceptor] Received 401 from:', req.url);
         
         // Don't clear auth or redirect if we're already on an auth page
         if (!router.url.includes('/auth/')) {

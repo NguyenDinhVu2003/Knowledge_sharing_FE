@@ -127,6 +127,16 @@ export class NotificationListComponent implements OnInit, OnDestroy {
     this.notifications$.subscribe({
       next: (notifications) => {
         console.log('=== NotificationListComponent: Received', notifications.length, 'notifications');
+        
+        // Debug: Log first notification's createdAt
+        if (notifications.length > 0) {
+          const firstNotif = notifications[0];
+          console.log('=== First notification createdAt:', firstNotif.createdAt);
+          console.log('=== Type:', typeof firstNotif.createdAt);
+          console.log('=== Parsed date:', new Date(firstNotif.createdAt));
+          console.log('=== Current time:', new Date());
+        }
+        
         this.loading = false;
         this.applyFilter();
       },
