@@ -2,6 +2,7 @@ import { Component, OnInit, inject, PLATFORM_ID, ChangeDetectorRef } from '@angu
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { environment } from '../../../../environments/environment';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
@@ -172,18 +173,22 @@ export class DocumentDetailComponent implements OnInit {
   createSafeUrl(filePath: string): void {
     console.log('=== createSafeUrl called with:', filePath);
     
-    // Use the file path as-is if it's already an absolute URL (from S3)
     let fullUrl = filePath;
     
-    // Only convert to localhost URL if it's a relative path (not starting with http)
+    // Build full S3 URL if filePath is just a filename/key (not a full URL)
     if (filePath && !filePath.startsWith('http')) {
-      // Ensure filePath starts with /
-      const normalizedPath = filePath.startsWith('/') ? filePath : `/${filePath}`;
-      // Assume files are served from backend
-      fullUrl = `http://localhost:8090${normalizedPath}`;
-      console.log('=== Converted relative path to:', fullUrl);
+      // Check if it looks like a UUID filename (S3 key)
+      if (!filePath.startsWith('/')) {
+        // It's an S3 key, build full S3 URL
+        fullUrl = `${environment.s3BaseUrl}/${filePath}`;
+        console.log('=== Built S3 URL:', fullUrl);
+      } else {
+        // It's a relative path, use backend URL (legacy support)
+        fullUrl = `http://localhost:8090${filePath}`;
+        console.log('=== Using backend URL:', fullUrl);
+      }
     } else {
-      console.log('=== Using S3 URL directly:', fullUrl);
+      console.log('=== Using provided URL directly:', fullUrl);
     }
     
     // For Office files (DOC, DOCX), use Microsoft Office Online Viewer
@@ -467,15 +472,18 @@ export class DocumentDetailComponent implements OnInit {
   downloadDocument(): void {
     if (!this.document || !this.document.filePath) return;
     
-    // Use the file path as-is if it's already an absolute URL (from S3)
     let downloadUrl = this.document.filePath;
     
-    // Only build localhost URL if it's a relative path
+    // Build full S3 URL if filePath is just a filename/key (not a full URL)
     if (!this.document.filePath.startsWith('http')) {
-      const normalizedPath = this.document.filePath.startsWith('/') 
-        ? this.document.filePath 
-        : `/${this.document.filePath}`;
-      downloadUrl = `http://localhost:8090${normalizedPath}`;
+      // Check if it looks like a UUID filename (S3 key)
+      if (!this.document.filePath.startsWith('/')) {
+        // It's an S3 key, build full S3 URL
+        downloadUrl = `${environment.s3BaseUrl}/${this.document.filePath}`;
+      } else {
+        // It's a relative path, use backend URL (legacy support)
+        downloadUrl = `http://localhost:8090${this.document.filePath}`;
+      }
     }
     
     console.log('=== Downloading file from:', downloadUrl);
