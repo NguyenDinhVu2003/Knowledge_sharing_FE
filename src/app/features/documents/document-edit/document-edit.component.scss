@@ -1,89 +1,12 @@
-.edit-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 32px 24px;
-  min-height: calc(100vh - 200px);
-}
+.edit-container{max-width:1200px;margin:0 auto;padding:32px 24px;min-height:calc(100vh - 200px)}
+.loading-container{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;gap:20px;p{color:#666;font-size:16px}}
 
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 400px;
-  gap: 20px;
+.edit-header{text-align:center;margin-bottom:40px;h1{margin:0 0 8px 0;font-size:32px;font-weight:600;color:#333}p{margin:0;color:#666;font-size:16px}}
+.edit-content{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px}
 
-  p {
-    color: #666;
-    font-size: 16px;
-  }
-}
+mat-card{border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:24px;&:last-child{margin-bottom:0}mat-card-header{margin-bottom:20px;mat-card-title{display:flex;align-items:center;gap:12px;font-size:20px;font-weight:600;color:#333;mat-icon{color:#e91e63}}}}
 
-.edit-header {
-  text-align: center;
-  margin-bottom: 40px;
-
-  h1 {
-    margin: 0 0 8px 0;
-    font-size: 32px;
-    font-weight: 600;
-    color: #333;
-  }
-
-  p {
-    margin: 0;
-    color: #666;
-    font-size: 16px;
-  }
-}
-
-.edit-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  margin-bottom: 32px;
-}
-
-// Card Styles
-mat-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 24px;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-
-  mat-card-header {
-    margin-bottom: 20px;
-
-    mat-card-title {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 20px;
-      font-weight: 600;
-      color: #333;
-
-      mat-icon {
-        color: #e91e63;
-      }
-    }
-  }
-}
-
-// Current Info Card
-.current-info-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-
-  mat-card-title {
-    color: white !important;
-
-    mat-icon {
-      color: white !important;
-    }
-  }
+.current-info-card{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;mat-card-title{color:white!important;mat-icon{color:white!important}}
 
   .info-item {
     display: flex;
