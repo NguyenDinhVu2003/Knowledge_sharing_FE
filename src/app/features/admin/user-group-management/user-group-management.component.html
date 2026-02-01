@@ -75,7 +75,7 @@
               <mat-option>-- Select a user --</mat-option>
               <mat-option *ngFor="let user of users" [value]="user.id">
                 <div class="user-option">
-                  <span class="user-email">{{ user.email }}</span>
+                  <span class="user-name">{{ user.username }}</span>
                   <mat-chip [color]="getRoleBadgeColor(user.role)" class="role-chip">
                     {{ user.role }}
                   </mat-chip>
