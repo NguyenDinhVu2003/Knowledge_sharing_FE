@@ -1,0 +1,242 @@
+<div class="group-management-container">
+  <app-header></app-header>
+
+  <div class="content-wrapper">
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <div class="title-section">
+          <h1>
+            <mat-icon>groups</mat-icon>
+            Group Management
+          </h1>
+          <p class="subtitle">Create, edit and manage groups</p>
+        </div>
+        <button mat-raised-button color="primary" (click)="showCreateGroupForm()" *ngIf="!showCreateForm">
+          <mat-icon>add_circle</mat-icon>
+          Create New Group
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-container">
+      <mat-spinner></mat-spinner>
+      <p>Loading groups...</p>
+    </div>
+
+    <!-- Main Content -->
+    <div *ngIf="!loading" class="main-content">
+      <!-- Stats -->
+      <div class="stats-grid">
+        <mat-card class="stat-card">
+          <div class="stat-content">
+            <mat-icon class="stat-icon">groups</mat-icon>
+            <div class="stat-details">
+              <h3>{{ groups.length }}</h3>
+              <p>Total Groups</p>
+            </div>
+          </div>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <div class="stat-content">
+            <mat-icon class="stat-icon">people</mat-icon>
+            <div class="stat-details">
+              <h3>{{ totalMembers }}</h3>
+              <p>Total Members</p>
+            </div>
+          </div>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <div class="stat-content">
+            <mat-icon class="stat-icon">description</mat-icon>
+            <div class="stat-details">
+              <h3>{{ totalDocuments }}</h3>
+              <p>Total Documents</p>
+            </div>
+          </div>
+        </mat-card>
+      </div>
+
+      <!-- Create/Edit Form -->
+      <mat-card *ngIf="showCreateForm" class="form-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>{{ editingGroupId ? 'edit' : 'add_circle' }}</mat-icon>
+            {{ editingGroupId ? 'Edit Group' : 'Create New Group' }}
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <form [formGroup]="groupForm" (ngSubmit)="onSubmit()">
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Group Name</mat-label>
+                <input matInput formControlName="name" placeholder="Enter group name" required>
+                <mat-icon matPrefix>label</mat-icon>
+                <mat-error *ngIf="name?.hasError('required')">Group name is required</mat-error>
+                <mat-error *ngIf="name?.hasError('maxlength')">
+                  Maximum 100 characters allowed
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Description</mat-label>
+                <textarea 
+                  matInput 
+                  formControlName="description" 
+                  rows="4"
+                  placeholder="Enter group description (optional)">
+                </textarea>
+                <mat-icon matPrefix>description</mat-icon>
+                <mat-hint>{{ description?.value?.length || 0 }} / 500 characters</mat-hint>
+                <mat-error *ngIf="description?.hasError('maxlength')">
+                  Maximum 500 characters allowed
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Add Members (Optional)</mat-label>
+                <mat-select formControlName="userIds" multiple>
+                  <mat-option *ngFor="let user of users" [value]="user.id">
+                    {{ user.email }} ({{ user.role }})
+                  </mat-option>
+                </mat-select>
+                <mat-icon matPrefix>person_add</mat-icon>
+                <mat-hint>You can add members now or later</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <div class="form-actions">
+              <button mat-raised-button color="primary" type="submit">
+                <mat-icon>{{ editingGroupId ? 'save' : 'add' }}</mat-icon>
+                {{ editingGroupId ? 'Update Group' : 'Create Group' }}
+              </button>
+              <button mat-button type="button" (click)="cancelForm()">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Search Bar -->
+      <mat-card class="search-card" *ngIf="!showCreateForm">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search groups</mat-label>
+          <input matInput #searchInput (input)="searchGroups(searchInput.value)" placeholder="Search by name or description">
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+      </mat-card>
+
+      <!-- Groups Table -->
+      <mat-card *ngIf="!showCreateForm" class="table-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>list</mat-icon>
+            All Groups
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div *ngIf="groups.length > 0; else noGroups" class="table-container">
+            <table mat-table [dataSource]="groups" class="groups-table">
+              <!-- Name Column -->
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Name</th>
+                <td mat-cell *matCellDef="let group">
+                  <div class="group-name">
+                    <mat-icon>group</mat-icon>
+                    <strong>{{ group.name }}</strong>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Description Column -->
+              <ng-container matColumnDef="description">
+                <th mat-header-cell *matHeaderCellDef>Description</th>
+                <td mat-cell *matCellDef="let group">
+                  <span class="description">{{ group.description || 'No description' }}</span>
+                </td>
+              </ng-container>
+
+              <!-- Members Column -->
+              <ng-container matColumnDef="members">
+                <th mat-header-cell *matHeaderCellDef>Members</th>
+                <td mat-cell *matCellDef="let group">
+                  <mat-chip class="count-chip">
+                    <mat-icon>people</mat-icon>
+                    {{ group.memberCount }}
+                  </mat-chip>
+                </td>
+              </ng-container>
+
+              <!-- Documents Column -->
+              <ng-container matColumnDef="documents">
+                <th mat-header-cell *matHeaderCellDef>Documents</th>
+                <td mat-cell *matCellDef="let group">
+                  <mat-chip class="count-chip">
+                    <mat-icon>description</mat-icon>
+                    {{ group.documentCount }}
+                  </mat-chip>
+                </td>
+              </ng-container>
+
+              <!-- Created Column -->
+              <ng-container matColumnDef="created">
+                <th mat-header-cell *matHeaderCellDef>Created</th>
+                <td mat-cell *matCellDef="let group">
+                  {{ group.createdAt | date:'short' }}
+                </td>
+              </ng-container>
+
+              <!-- Actions Column -->
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                <td mat-cell *matCellDef="let group">
+                  <div class="actions-cell">
+                    <button 
+                      mat-icon-button 
+                      color="primary"
+                      (click)="editGroup(group)"
+                      matTooltip="Edit group">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button 
+                      mat-icon-button 
+                      color="warn"
+                      (click)="deleteGroup(group)"
+                      matTooltip="Delete group">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+          </div>
+
+          <ng-template #noGroups>
+            <div class="empty-state">
+              <mat-icon>inbox</mat-icon>
+              <h3>No groups found</h3>
+              <p>Create your first group to get started</p>
+              <button mat-raised-button color="primary" (click)="showCreateGroupForm()">
+                <mat-icon>add</mat-icon>
+                Create Group
+              </button>
+            </div>
+          </ng-template>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <app-footer></app-footer>
+</div>

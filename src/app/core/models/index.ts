@@ -7,3 +7,4 @@ export * from './user-interest.model';
 export * from './admin.model';
 export * from './common.model';
 export * from './comment.model';
+export * from './group.model';

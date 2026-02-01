@@ -2,6 +2,8 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AdminDashboardComponent } from './admin-dashboard/admin-dashboard.component';
 import { UserManagementComponent } from './user-management/user-management.component';
+import { UserGroupManagementComponent } from './user-group-management/user-group-management.component';
+import { GroupManagementComponent } from './group-management/group-management.component';
 
 const routes: Routes = [
   {
@@ -18,6 +20,16 @@ const routes: Routes = [
     path: 'users',
     component: UserManagementComponent,
     title: 'User Management'
+  },
+  {
+    path: 'user-groups',
+    component: UserGroupManagementComponent,
+    title: 'User-Group Management'
+  },
+  {
+    path: 'groups',
+    component: GroupManagementComponent,
+    title: 'Group Management'
   }
 ];
 
