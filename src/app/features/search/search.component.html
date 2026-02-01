@@ -80,19 +80,7 @@
             <mat-select formControlName="sharingLevel">
               <mat-option value="">All</mat-option>
               <mat-option value="PUBLIC">🌐 Public</mat-option>
-              <mat-option value="GROUP">👥 Group</mat-option>
               <mat-option value="PRIVATE">🔒 Private</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <!-- Group Filter -->
-          <mat-form-field appearance="outline">
-            <mat-label>Group</mat-label>
-            <mat-select formControlName="groupId">
-              <mat-option value="">All Groups</mat-option>
-              <mat-option *ngFor="let group of availableGroups" [value]="group.id">
-                {{ group.name }}
-              </mat-option>
             </mat-select>
           </mat-form-field>
 
@@ -218,7 +206,7 @@
       <mat-list-item>
         <mat-icon matListItemIcon>filter_list</mat-icon>
         <div matListItemTitle>Advanced Filters</div>
-        <div matListItemLine>Narrow down results by tags, dates, sharing level, and groups</div>
+        <div matListItemLine>Narrow down results by tags, dates, and sharing level</div>
       </mat-list-item>
     </mat-list>
 

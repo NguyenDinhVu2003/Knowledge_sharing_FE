@@ -81,14 +81,6 @@ export class AdminDashboardComponent implements OnInit {
     this.router.navigate(['/admin/users']);
   }
 
-  navigateToGroupManagement(): void {
-    this.router.navigate(['/admin/groups']);
-  }
-
-  navigateToUserGroupManagement(): void {
-    this.router.navigate(['/admin/user-groups']);
-  }
-
   getObjectKeys(obj: any): string[] {
     return Object.keys(obj || {});
   }

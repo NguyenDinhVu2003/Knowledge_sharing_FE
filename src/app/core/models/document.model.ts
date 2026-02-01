@@ -23,8 +23,7 @@
  *   "isFavorited": true,
  *   "createdAt": "2025-12-17T01:07:23.288084",
  *   "updatedAt": "2025-12-17T01:07:23.288084",
- *   "tags": ["Angular", "Frontend"],
- *   "groupIds": []
+ *   "tags": ["Angular", "Frontend"]
  * }
  */
 export interface DocumentModel {
@@ -36,7 +35,7 @@ export interface DocumentModel {
   fileName?: string;
   fileType: string;
   fileSize: number;
-  sharingLevel: 'PUBLIC' | 'PRIVATE' | 'GROUP';
+  sharingLevel: 'PUBLIC' | 'PRIVATE';
   versionNumber: number;
   isArchived: boolean;
   ownerId: number;
@@ -50,7 +49,6 @@ export interface DocumentModel {
   createdAt: string;
   updatedAt: string;
   tags: string[];
-  groupIds: number[];
   semanticScore?: number; // AI similarity score (0.0-1.0) - only for semantic search results
 }
 
@@ -62,7 +60,7 @@ export interface DocumentCreateRequest {
   title: string;
   summary: string;
   tags: string[];
-  sharingLevel: 'PUBLIC' | 'PRIVATE' | 'GROUP';
+  sharingLevel: 'PUBLIC' | 'PRIVATE';
 }
 
 /**
@@ -72,7 +70,7 @@ export interface DocumentUpdateRequest {
   title?: string;
   summary?: string;
   tags?: string[];
-  sharingLevel?: 'PUBLIC' | 'PRIVATE' | 'GROUP';
+  sharingLevel?: 'PUBLIC' | 'PRIVATE';
 }
 
 // Alias for backward compatibility
@@ -89,13 +87,4 @@ export interface DocumentVersion {
   updatedBy: string;
   updatedAt: string;
   changeNotes: string;
-}
-
-/**
- * Group for document sharing
- */
-export interface Group {
-  id: number;
-  name: string;
-  description?: string;
 }

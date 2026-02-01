@@ -13,26 +13,14 @@ export interface Tag {
   createdAt: string;
 }
 
-export interface Group {
-  id: number;
-  name: string;
-  description: string;
-  memberCount: number;
-  documentCount: number;
-  memberUsernames: string[];
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface SearchFilters {
   q?: string;
   tags?: string[];
   matchAllTags?: boolean;
-  sharingLevel?: 'PRIVATE' | 'GROUP' | 'DEPARTMENT' | 'PUBLIC';
+  sharingLevel?: 'PRIVATE' | 'PUBLIC';
   fileType?: string;
   ownerId?: number;
   ownerUsername?: string;
-  groupIds?: number[];
   minRating?: number;
   maxRating?: number;
   fromDate?: Date;
@@ -88,7 +76,6 @@ export class SearchService {
     if (request.filters.fileType) params = params.set('fileType', request.filters.fileType);
     if (request.filters.ownerId) params = params.set('ownerId', request.filters.ownerId.toString());
     if (request.filters.ownerUsername) params = params.set('ownerUsername', request.filters.ownerUsername);
-    if (request.filters.groupIds?.length) params = params.set('groupIds', request.filters.groupIds.join(','));
     if (request.filters.minRating) params = params.set('minRating', request.filters.minRating.toString());
     if (request.filters.maxRating) params = params.set('maxRating', request.filters.maxRating.toString());
     if (request.filters.fromDate) params = params.set('fromDate', request.filters.fromDate.toISOString());
@@ -122,19 +109,6 @@ export class SearchService {
     return this.http.get<Tag[]>(`${environment.apiUrl}/tags`).pipe(
       catchError(error => {
         console.error('Error loading tags:', error);
-        throw error;
-      })
-    );
-  }
-
-  /**
-   * Get all groups for filter dropdown
-   * GET /api/groups
-   */
-  getAllGroups(): Observable<Group[]> {
-    return this.http.get<Group[]>(`${environment.apiUrl}/groups`).pipe(
-      catchError(error => {
-        console.error('Error loading groups:', error);
         throw error;
       })
     );

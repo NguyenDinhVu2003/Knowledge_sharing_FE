@@ -15,7 +15,6 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DocumentService } from '../../../core/services/document.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Group } from '../../../core/models/document.model';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { DragDropDirective } from '../../../shared/directives/drag-drop.directive';
@@ -61,7 +60,6 @@ export class DocumentUploadComponent implements OnInit {
   uploading = false;
   generatingSummary = false;
   
-  availableGroups: Group[] = [];
   selectedTags: string[] = [];
   availableTags: string[] = [];
   filteredTags$!: Observable<string[]>;
@@ -70,7 +68,6 @@ export class DocumentUploadComponent implements OnInit {
   sharingLevels = [
     { value: 'PUBLIC', label: 'Public - Everyone can access' },
     { value: 'DEPARTMENT', label: 'Department - Department members only' },
-    { value: 'GROUP', label: 'Group - Selected groups only' },
     { value: 'PRIVATE', label: 'Private - Only me' }
   ];
 
@@ -82,7 +79,6 @@ export class DocumentUploadComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
-    this.loadGroups();
     this.loadAvailableTags();
     this.setupTagFilter();
   }
@@ -91,31 +87,7 @@ export class DocumentUploadComponent implements OnInit {
     this.uploadForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(200)]],
       summary: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(1000)]],
-      sharingLevel: ['PUBLIC', Validators.required],
-      groupIds: [[]]
-    });
-
-    // Watch sharing level changes
-    this.uploadForm.get('sharingLevel')?.valueChanges.subscribe(level => {
-      const groupControl = this.uploadForm.get('groupIds');
-      if (level === 'GROUP') {
-        groupControl?.setValidators([Validators.required]);
-      } else {
-        groupControl?.clearValidators();
-        groupControl?.setValue([]);
-      }
-      groupControl?.updateValueAndValidity();
-    });
-  }
-
-  loadGroups(): void {
-    this.documentService.getAvailableGroups().subscribe({
-      next: (groups) => {
-        this.availableGroups = groups;
-      },
-      error: (error) => {
-        console.error('Error loading groups:', error);
-      }
+      sharingLevel: ['PUBLIC', Validators.required]
     });
   }
 
@@ -305,9 +277,5 @@ export class DocumentUploadComponent implements OnInit {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-  }
-
-  get showGroupSelection(): boolean {
-    return this.uploadForm.get('sharingLevel')?.value === 'GROUP';
   }
 }

@@ -3,14 +3,14 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import type { Document } from '../models';
-import { DocumentVersion, Group, PagedResponse } from '../models';
+import { DocumentVersion, PagedResponse } from '../models';
 import { environment } from '../../../environments/environment.development';
 
 export interface DocumentQueryParams {
   page?: number;
   size?: number;
   sortBy?: 'recent' | 'oldest' | 'popular' | 'title';
-  level?: 'PUBLIC' | 'GROUP' | 'PRIVATE' | 'ALL';
+  level?: 'PUBLIC' | 'PRIVATE' | 'ALL';
   search?: string;
 }
 
@@ -193,15 +193,6 @@ export class DocumentService {
     return this.http.post<{ tags: string[] }>(`/ai/tags`, { content }).pipe(
       catchError(error => {
         console.error('Error suggesting tags:', error);
-        return throwError(() => error);
-      })
-    );
-  }
-
-  getAvailableGroups(): Observable<Group[]> {
-    return this.http.get<Group[]>(`${environment.apiUrl}/groups`).pipe(
-      catchError(error => {
-        console.error('Error fetching groups:', error);
         return throwError(() => error);
       })
     );

@@ -86,21 +86,6 @@
               </mat-select>
               <mat-icon matPrefix>security</mat-icon>
             </mat-form-field>
-
-            @if (showGroupSelection) {
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Select Groups</mat-label>
-                <mat-select formControlName="groupIds" multiple>
-                  @for (group of availableGroups; track group.id) {
-                    <mat-option [value]="group.id">
-                      {{ group.name }}
-                    </mat-option>
-                  }
-                </mat-select>
-                <mat-icon matPrefix>group</mat-icon>
-                <mat-hint>Choose which groups can access this document</mat-hint>
-              </mat-form-field>
-            }
           </mat-card-content>
         </mat-card>
       </div>

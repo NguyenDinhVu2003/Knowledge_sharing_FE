@@ -16,7 +16,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { DocumentService } from '../../../core/services/document.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Document, Group } from '../../../core/models/document.model';
+import { Document } from '../../../core/models/document.model';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { DragDropDirective } from '../../../shared/directives/drag-drop.directive';
@@ -75,7 +75,6 @@ export class DocumentEditComponent implements OnInit {
 
   sharingLevels = [
     { value: 'PUBLIC', label: 'Public - Everyone can access' },
-    { value: 'GROUP', label: 'Group - Selected groups only' },
     { value: 'PRIVATE', label: 'Private - Only me' }
   ];
 
@@ -102,11 +101,6 @@ export class DocumentEditComponent implements OnInit {
       summary: ['', [Validators.maxLength(500)]],
       sharingLevel: ['PUBLIC', Validators.required]
     });
-  }
-
-  loadGroups(): void {
-    // Groups not needed for basic document edit
-    // Only used if sharingLevel is GROUP
   }
 
   loadDocument(id: number): void {
@@ -349,10 +343,5 @@ export class DocumentEditComponent implements OnInit {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-  }
-
-  get showGroupSelection(): boolean {
-    // Groups not supported in current API version
-    return false;
   }
 }

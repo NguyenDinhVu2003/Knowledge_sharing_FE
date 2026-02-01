@@ -18,7 +18,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatListModule } from '@angular/material/list';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { SearchService, SearchRequest, SearchResponse, Tag, Group } from '../../core/services/search.service';
+import { SearchService, SearchRequest, SearchResponse, Tag } from '../../core/services/search.service';
 import { AuthService } from '../../core/services/auth.service';
 import { DocumentService } from '../../core/services/document.service';
 import { Document } from '../../core/models/document.model';
@@ -81,7 +81,6 @@ export class SearchComponent implements OnInit {
   };
 
   availableTags: Tag[] = [];
-  availableGroups: Group[] = [];
 
   searching: boolean = false;
   searchPerformed: boolean = false;
@@ -123,7 +122,6 @@ export class SearchComponent implements OnInit {
       dateFrom: [null],
       dateTo: [null],
       sharingLevel: [''],
-      groupId: [''],
       sortBy: ['recent']
     });
   }
@@ -141,16 +139,6 @@ export class SearchComponent implements OnInit {
       },
       error: (err) => console.error('❌ Failed to load tags', err)
     });
-
-    // Load available groups
-    this.searchService.getAllGroups().subscribe({
-      next: (groups) => {
-        this.availableGroups = groups;
-        console.log(`✅ Groups loaded in ${(performance.now() - startTime).toFixed(2)}ms:`, groups.length, 'groups');
-        this.cdr.markForCheck();
-      },
-      error: (err) => console.error('❌ Failed to load groups', err)
-    });
   }
 
   onSearchTypeChange() {
@@ -162,7 +150,6 @@ export class SearchComponent implements OnInit {
         dateFrom: null,
         dateTo: null,
         sharingLevel: '',
-        groupId: '',
         sortBy: 'recent'
       });
     }
@@ -292,7 +279,6 @@ export class SearchComponent implements OnInit {
     if (this.searchForm.get('dateFrom')?.value) count++;
     if (this.searchForm.get('dateTo')?.value) count++;
     if (this.searchForm.get('sharingLevel')?.value) count++;
-    if (this.searchForm.get('groupId')?.value) count++;
     return count;
   }
 
@@ -303,7 +289,6 @@ export class SearchComponent implements OnInit {
       dateFrom: null,
       dateTo: null,
       sharingLevel: '',
-      groupId: '',
       sortBy: 'recent'
     });
     this.searchPerformed = false;

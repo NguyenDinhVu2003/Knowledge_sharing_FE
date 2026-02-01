@@ -19,14 +19,6 @@
         <mat-icon>people</mat-icon>
         Manage Users
       </button>
-      <button mat-raised-button (click)="navigateToGroupManagement()">
-        <mat-icon>groups</mat-icon>
-        Manage Groups
-      </button>
-      <button mat-raised-button (click)="navigateToUserGroupManagement()">
-        <mat-icon>group_add</mat-icon>
-        User Groups
-      </button>
     </div>
   </div>
 
@@ -120,19 +112,6 @@
               <h2>{{ statistics.totalTags }}</h2>
               <p>Tags</p>
               <span class="stat-detail">Categories</span>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <mat-card class="stat-card group-card">
-          <mat-card-content>
-            <div class="stat-icon">
-              <mat-icon>group_work</mat-icon>
-            </div>
-            <div class="stat-info">
-              <h2>{{ statistics.totalGroups }}</h2>
-              <p>Groups</p>
-              <span class="stat-detail">Collaborations</span>
             </div>
           </mat-card-content>
         </mat-card>

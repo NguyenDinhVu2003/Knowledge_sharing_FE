@@ -38,8 +38,7 @@ export class SharedTestComponent {
       isArchived: false,
       averageRating: 4.5,
       ratingCount: 10,
-      tags: ['Angular', 'Components'],
-      groupIds: []
+      tags: ['Angular', 'Components']
     },
     {
       id: 2,
@@ -50,15 +49,14 @@ export class SharedTestComponent {
       fileSize: 512000,
       ownerId: 2,
       ownerUsername: 'Jane Smith',
-      sharingLevel: 'GROUP',
+      sharingLevel: 'PUBLIC',
       createdAt: '2024-02-10T00:00:00Z',
       updatedAt: '2024-02-10T00:00:00Z',
       versionNumber: 1,
       isArchived: false,
       averageRating: 4.8,
       ratingCount: 5,
-      tags: ['TypeScript', 'Best Practices'],
-      groupIds: [1]
+      tags: ['TypeScript', 'Best Practices']
     },
     {
       id: 3,
@@ -76,8 +74,7 @@ export class SharedTestComponent {
       isArchived: false,
       averageRating: 4.9,
       ratingCount: 15,
-      tags: ['RxJS', 'Operators'],
-      groupIds: []
+      tags: ['RxJS', 'Operators']
     },
     {
       id: 4,
@@ -95,8 +92,7 @@ export class SharedTestComponent {
       isArchived: true,
       averageRating: 4.3,
       ratingCount: 8,
-      tags: ['Angular', 'Material'],
-      groupIds: []
+      tags: ['Angular', 'Material']
     }
   ]);
 
